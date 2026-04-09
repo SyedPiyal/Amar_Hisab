@@ -1,0 +1,18 @@
+{
+  "appTitle": "আমার হিসাব",
+  "totalBalance": "মোট ব্যালেন্স",
+  "income": "আয়",
+  "expense": "ব্যয়",
+  "recentTransactions": "সাম্প্রতিক লেনদেন",
+  "add": "যোগ করুন",
+  "report": "রিপোর্ট",
+  "home": "হোম",
+  "accounts": "অ্যাকাউন্টস",
+  "transactions": "লেনদেন",
+  "settings": "সেটিংস",
+  "salary": "বেতন",
+  "grocery": "বাজার",
+  "today": "আজ",
+  "smartAccounting": "স্মার্ট পার্সোনাল অ্যাকাউন্টিন",
+  "preparingAccounts": "আপনার হিসাব প্রস্তুত করা হচ্ছে..."
+}
