@@ -11,10 +11,18 @@ import 'models/account.dart';
 import 'models/transaction.dart';
 import 'models/user.dart';
 import 'models/app_settings.dart';
+import 'models/debt.dart';
+import 'models/budget.dart';
+import 'models/scheduled_transaction.dart';
+import 'models/savings_goal.dart';
 import 'providers/account_provider.dart';
 import 'providers/transaction_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/settings_provider.dart';
+import 'providers/debt_provider.dart';
+import 'providers/budget_provider.dart';
+import 'providers/scheduled_transaction_provider.dart';
+import 'providers/savings_goal_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +31,10 @@ void main() async {
   Hive.registerAdapter(TransactionAdapter());
   Hive.registerAdapter(UserAdapter());
   Hive.registerAdapter(AppSettingsAdapter());
+  Hive.registerAdapter(DebtAdapter());
+  Hive.registerAdapter(BudgetAdapter());
+  Hive.registerAdapter(ScheduledTransactionAdapter());
+  Hive.registerAdapter(SavingsGoalAdapter());
 
   runApp(
     MultiProvider(
@@ -31,6 +43,10 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AccountProvider()),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(create: (_) => DebtProvider()),
+        ChangeNotifierProvider(create: (_) => BudgetProvider()),
+        ChangeNotifierProvider(create: (_) => ScheduledTransactionProvider()),
+        ChangeNotifierProvider(create: (_) => SavingsGoalProvider()),
       ],
       child: const MyApp(),
     ),

@@ -296,7 +296,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         children: [
           _buildSelectionItem('সম্পদ (Assets)', true),
           _buildSelectionItem('দায় (Liabilities)', true),
-          _buildSelectionItem('מালিকানাধীন মূলধন (Equity)', true),
+          _buildSelectionItem('মালিকানাধীন মূলধন (Equity)', true),
           _buildSelectionItem('আয় (Income)', true),
           _buildSelectionItem('ব্যয় (Expenses)', true),
         ],

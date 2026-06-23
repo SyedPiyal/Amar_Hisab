@@ -37,6 +37,18 @@ class Transaction extends HiveObject {
   @HiveField(10)
   final Map<String, double>? splitDetails; // Category name -> Amount
 
+  @HiveField(11)
+  final String? debtId;
+
+  @HiveField(12)
+  final List<String>? attachmentPaths;
+
+  @HiveField(13)
+  final double? taxPercentage;
+
+  @HiveField(14)
+  final double? taxAmount;
+
   Transaction({
     required this.id,
     required this.title,
@@ -49,5 +61,9 @@ class Transaction extends HiveObject {
     this.debitAccountId,
     this.isSplit = false,
     this.splitDetails,
+    this.debtId,
+    this.attachmentPaths,
+    this.taxPercentage,
+    this.taxAmount,
   });
 }

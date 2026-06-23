@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../theme/app_colors.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/settings_provider.dart';
+import '../../services/pdf_service.dart';
 
 class AccountBalancesScreen extends StatelessWidget {
   const AccountBalancesScreen({super.key});
@@ -24,6 +25,27 @@ class AccountBalancesScreen extends StatelessWidget {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: () async {
+              final accProvider = Provider.of<AccountProvider>(context, listen: false);
+              try {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PDF তৈরি হচ্ছে...')));
+                await PdfExportService.exportAccountBalances(
+                  accounts: accProvider.accounts,
+                  totalBalance: accProvider.totalBalance,
+                );
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                }
+              }
+            },
+            icon: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.primary),
+            tooltip: 'Export PDF',
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Consumer<AccountProvider>(
         builder: (context, provider, _) {

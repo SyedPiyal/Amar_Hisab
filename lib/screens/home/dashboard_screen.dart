@@ -15,9 +15,104 @@ import 'notifications_screen.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/transaction_provider.dart';
+import '../../providers/scheduled_transaction_provider.dart';
+import '../../services/ai_service.dart';
+import '../../widgets/ai_voice_dialog.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  String _aiAdvice = '';
+  bool _isLoadingAdvice = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final txProvider = Provider.of<TransactionProvider>(context, listen: false);
+      final accountProvider = Provider.of<AccountProvider>(context, listen: false);
+      final scheduledProvider = Provider.of<ScheduledTransactionProvider>(context, listen: false);
+      
+      // Load and process scheduled transactions
+      scheduledProvider.loadSchedules().then((_) {
+        scheduledProvider.processDueTransactions(txProvider, accountProvider);
+      });
+      
+      _loadAiAdvice();
+    });
+  }
+
+  void _loadAiAdvice() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoadingAdvice = true;
+    });
+
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final txProvider = Provider.of<TransactionProvider>(context, listen: false);
+
+    double totalIncome = 0.0;
+    double totalExpense = 0.0;
+    for (var tx in txProvider.transactions) {
+      if (tx.type == 'Income') {
+        totalIncome += tx.amount;
+      } else if (tx.type == 'Expense') {
+        totalExpense += tx.amount;
+      }
+    }
+    double netSavings = totalIncome - totalExpense;
+
+    try {
+      final advice = await AiService.generateFinancialAdvice(
+        totalIncome,
+        totalExpense,
+        netSavings,
+        settings.geminiApiKey,
+      );
+      if (mounted) {
+        setState(() {
+          _aiAdvice = advice;
+          _isLoadingAdvice = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoadingAdvice = false;
+        });
+      }
+    }
+  }
+
+  void _showVoiceCommandDialog() async {
+    final settings = Provider.of<SettingsProvider>(context, listen: false).settings;
+    
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => AiVoiceDialog(apiKey: settings.geminiApiKey),
+    );
+
+    if (result != null && mounted) {
+      final parsedTitle = result['title'] ?? 'ভয়েস এন্ট্রি';
+      
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AddTransactionScreen(
+            initialCategory: parsedTitle,
+            initialAmount: (result['amount'] ?? 0.0).toString(),
+          ),
+        ),
+      ).then((_) {
+        _loadAiAdvice();
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +133,11 @@ class DashboardScreen extends StatelessWidget {
           ),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.mic_none_rounded, color: AppColors.primary),
+            tooltip: 'AI Voice Command',
+            onPressed: _showVoiceCommandDialog,
+          ),
           IconButton(
             icon: const Icon(Icons.search_rounded),
             onPressed: () {
@@ -96,131 +196,93 @@ class DashboardScreen extends StatelessWidget {
                   }
                 }
 
-                return Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [AppColors.primary, AppColors.secondary],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'মোট ব্যালেন্স (Net Balance)',
-                          style: GoogleFonts.hindSiliguri(
-                            color: Colors.white.withValues(alpha: 0.8),
-                            fontSize: 14,
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [AppColors.primary, AppColors.secondary],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          balanceFormat.format(accountProvider.totalBalance),
-                          style: GoogleFonts.hindSiliguri(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _buildBalanceInfo(
-                              'আয় (Income)',
-                              balanceFormat.format(totalIncome),
-                              Icons.arrow_downward_rounded,
-                            ),
-                            _buildBalanceInfo(
-                              'ব্যয় (Expense)',
-                              balanceFormat.format(totalExpense),
-                              Icons.arrow_upward_rounded,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        const Divider(color: Colors.white24),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildBalanceInfo(
-                              'নগদ (Cash)',
-                              balanceFormat.format(accountProvider.cashBalance),
-                              Icons.money_rounded,
+                            Text(
+                              'মোট ব্যালেন্স (Net Balance)',
+                              style: GoogleFonts.hindSiliguri(
+                                color: Colors.white.withValues(alpha: 0.8),
+                                fontSize: 14,
+                              ),
                             ),
-                            _buildBalanceInfo(
-                              'ব্যাংক (Bank)',
-                              balanceFormat.format(accountProvider.bankBalance),
-                              Icons.food_bank_rounded,
+                            const SizedBox(height: 8),
+                            Text(
+                              balanceFormat.format(accountProvider.totalBalance),
+                              style: GoogleFonts.hindSiliguri(
+                                color: Colors.white,
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Ratio Bar
-                        if (totalIncome > 0 || totalExpense > 0)
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: LinearProgressIndicator(
-                                  value:
-                                      totalIncome /
-                                      (totalIncome + totalExpense),
-                                  backgroundColor: AppColors.error.withValues(
-                                    alpha: 0.5,
-                                  ),
-                                  valueColor:
-                                      const AlwaysStoppedAnimation<Color>(
-                                        AppColors.success,
-                                      ),
-                                  minHeight: 8,
+                            const SizedBox(height: 24),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                _buildBalanceInfo(
+                                  'আয় (Income)',
+                                  balanceFormat.format(totalIncome),
+                                  Icons.arrow_downward_rounded,
                                 ),
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'আয়ের অনুপাত: ${((totalIncome / (totalIncome + totalExpense)) * 100).toStringAsFixed(0)}%',
-                                    style: GoogleFonts.hindSiliguri(
-                                      color: Colors.white70,
-                                      fontSize: 10,
-                                    ),
-                                  ),
-                                  Text(
-                                    'ব্যয়ের অনুপাত: ${((totalExpense / (totalIncome + totalExpense)) * 100).toStringAsFixed(0)}%',
-                                    style: GoogleFonts.hindSiliguri(
-                                      color: Colors.white70,
-                                      fontSize: 10,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                      ],
+                                _buildBalanceInfo(
+                                  'ব্যয় (Expense)',
+                                  balanceFormat.format(totalExpense),
+                                  Icons.arrow_upward_rounded,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            const Divider(color: Colors.white24),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                _buildBalanceInfo(
+                                  'নগদ (Cash)',
+                                  balanceFormat.format(accountProvider.cashBalance),
+                                  Icons.money_rounded,
+                                ),
+                                _buildBalanceInfo(
+                                  'ব্যাংক (Bank)',
+                                  balanceFormat.format(accountProvider.bankBalance),
+                                  Icons.food_bank_rounded,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
+                    _buildSavingsTracker(context, transactionProvider, settings),
+                    _buildAiAdviceCard(context),
+                  ],
                 );
               },
             ),
+
+            _buildQuickActions(context),
 
             // Recent Transactions Section
             Padding(
@@ -282,6 +344,8 @@ class DashboardScreen extends StatelessWidget {
               },
             ),
 
+            const SizedBox(height: 16),
+            _buildTopExpenses(context),
             const SizedBox(height: 20),
 
             // Financial Health Chart (REAL DATA with Income & Expense)
@@ -468,6 +532,7 @@ class DashboardScreen extends StatelessWidget {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
+        type: BottomNavigationBarType.fixed,
         onTap: (index) {
           if (index == 1) {
             Navigator.of(context).push(
@@ -513,6 +578,262 @@ class DashboardScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildQuickActions(BuildContext context) {
+    final actions = [
+      {'label': 'বাজার', 'icon': Icons.shopping_cart_outlined, 'color': Colors.orange},
+      {'label': 'খাবার', 'icon': Icons.restaurant_rounded, 'color': Colors.redAccent},
+      {'label': 'যাতায়াত', 'icon': Icons.directions_bus_rounded, 'color': Colors.blue},
+      {'label': 'মেডিসিন', 'icon': Icons.medical_services_rounded, 'color': Colors.green},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+          child: Text(
+            'কুইক অ্যাকশন',
+            style: GoogleFonts.hindSiliguri(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        SizedBox(
+          height: 100,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            itemCount: actions.length,
+            itemBuilder: (context, index) {
+              final action = actions[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AddTransactionScreen(
+                          initialCategory: action['label'] as String,
+                        ),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    width: 85,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(action['icon'] as IconData, color: action['color'] as Color),
+                        const SizedBox(height: 8),
+                        Text(
+                          action['label'] as String,
+                          style: GoogleFonts.hindSiliguri(fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSavingsTracker(BuildContext context, TransactionProvider provider, SettingsProvider settings) {
+    final savings = provider.getMonthlySavings();
+    final goal = settings.settings.monthlySavingsGoal;
+    final progress = (savings / goal).clamp(0.0, 1.0);
+    final percent = (progress * 100).toInt();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'মাসিক সঞ্চয় লক্ষ্য',
+                      style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      'লক্ষ্য: ৳${NumberFormat('#,###').format(goal)}',
+                      style: GoogleFonts.hindSiliguri(fontSize: 12, color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+                Text(
+                  '$percent%',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: AppColors.secondary, fontSize: 18),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 10,
+                backgroundColor: AppColors.secondary.withValues(alpha: 0.1),
+                valueColor: const AlwaysStoppedAnimation(AppColors.secondary),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'বর্তমানে: ৳${NumberFormat('#,###').format(savings)}',
+                  style: GoogleFonts.hindSiliguri(fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  savings >= goal ? 'লক্ষ্য পূরণ!' : 'বাকি: ৳${NumberFormat('#,###').format(goal - savings)}',
+                  style: GoogleFonts.hindSiliguri(fontSize: 12, color: savings >= goal ? AppColors.success : AppColors.textSecondary),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAiAdviceCard(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.purple.shade50, Colors.deepPurple.shade50],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.purple.shade100),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      const Icon(Icons.auto_awesome_rounded, color: Colors.purple),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          'এআই আর্থিক পরামর্শদাতা (AI Advisor)',
+                          style: GoogleFonts.hindSiliguri(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.purple.shade900,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.refresh_rounded, color: Colors.purple, size: 20),
+                  onPressed: _loadAiAdvice,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (_isLoadingAdvice)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: CircularProgressIndicator(color: Colors.purple),
+                ),
+              )
+            else
+              Text(
+                _aiAdvice.isNotEmpty ? _aiAdvice : 'আপনার লেনদেনের তালিকা খালি রয়েছে অথবা এআই রিফ্রেশ করুন।',
+                style: GoogleFonts.hindSiliguri(fontSize: 13, color: Colors.purple.shade900, height: 1.5),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopExpenses(BuildContext context) {
+    final provider = Provider.of<TransactionProvider>(context);
+    final topTxs = provider.todayTopTransactions;
+
+    if (topTxs.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+          child: Text(
+            'আজকের সর্বোচ্চ খরচ (টপ ৩)',
+            style: GoogleFonts.hindSiliguri(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        ...topTxs.map((tx) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.trending_up, color: AppColors.error, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    tx.title,
+                    style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.w500),
+                  ),
+                ),
+                Text(
+                  '৳${NumberFormat('#,###').format(tx.amount)}',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: AppColors.error),
+                ),
+              ],
+            ),
+          ),
+        )),
+      ],
     );
   }
 

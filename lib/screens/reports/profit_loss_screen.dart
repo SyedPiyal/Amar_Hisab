@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../theme/app_colors.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/account_provider.dart';
+import '../../services/pdf_service.dart';
 
 class ProfitLossScreen extends StatelessWidget {
   const ProfitLossScreen({super.key});
@@ -21,6 +22,37 @@ class ProfitLossScreen extends StatelessWidget {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: () async {
+              final txProvider = Provider.of<TransactionProvider>(context, listen: false);
+              final incomeTxs = txProvider.transactions.where((t) => t.type == 'Income').toList();
+              final expenseTxs = txProvider.transactions.where((t) => t.type == 'Expense').toList();
+              
+              final totalIncome = incomeTxs.fold(0.0, (s, t) => s + t.amount);
+              final totalExpense = expenseTxs.fold(0.0, (s, t) => s + t.amount);
+              final netProfit = totalIncome - totalExpense;
+
+              try {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PDF তৈরি হচ্ছে...')));
+                await PdfExportService.exportProfitLoss(
+                  incomeTxs: incomeTxs,
+                  expenseTxs: expenseTxs,
+                  totalIncome: totalIncome,
+                  totalExpense: totalExpense,
+                  netProfit: netProfit,
+                );
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                }
+              }
+            },
+            icon: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.primary),
+            tooltip: 'Export PDF',
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Consumer2<TransactionProvider, AccountProvider>(
         builder: (context, txProvider, accProvider, _) {

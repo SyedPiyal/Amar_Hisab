@@ -44,6 +44,13 @@ dependencies:
   path_provider: ^2.1.5
   provider: ^6.1.5+1
   fl_chart: ^0.71.0
+  pdf: ^3.10.8
+  printing: ^5.11.1
+  http: ^1.1.0
+  image_picker: ^1.0.7
+  url_launcher: ^6.2.5
+  google_generative_ai: ^0.4.7
+  speech_to_text: ^7.4.0
 
 dev_dependencies:
   flutter_test:

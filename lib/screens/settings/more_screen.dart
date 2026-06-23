@@ -11,6 +11,7 @@ import '../settings/settings_screen.dart';
 import '../profile/profile_screen.dart';
 import '../help/help_screen.dart';
 import '../auth/login_screen.dart';
+import '../debts/debts_screen.dart';
 import 'category_management_screen.dart';
 import '../profile/subscription_plan_screen.dart';
 import '../help/user_manual_screen.dart';
@@ -40,6 +41,12 @@ class MoreScreen extends StatelessWidget {
               'রিপোর্ট ও এনালাইটিক্স',
               Icons.analytics_outlined,
               const ReportsScreen(),
+            ),
+            _buildMenuItem(
+              context,
+              'দেনা-পাওনা',
+              Icons.handshake_outlined,
+              const DebtsScreen(),
             ),
             _buildMenuItem(
               context,

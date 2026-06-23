@@ -56,4 +56,34 @@ class TransactionProvider with ChangeNotifier {
       ..sort((a, b) => b.date.compareTo(a.date));
     notifyListeners();
   }
+
+  double getMonthlySavings() {
+    final now = DateTime.now();
+    double income = 0;
+    double expense = 0;
+    
+    for (var tx in _transactions) {
+      if (tx.date.month == now.month && tx.date.year == now.year) {
+        if (tx.type == 'Income') {
+          income += tx.amount;
+        } else if (tx.type == 'Expense') {
+          expense += tx.amount;
+        }
+      }
+    }
+    return income - expense;
+  }
+
+  List<Transaction> get todayTopTransactions {
+    final now = DateTime.now();
+    final todayTxs = _transactions.where((tx) => 
+      tx.date.day == now.day && 
+      tx.date.month == now.month && 
+      tx.date.year == now.year &&
+      tx.type == 'Expense'
+    ).toList();
+    
+    todayTxs.sort((a, b) => b.amount.compareTo(a.amount));
+    return todayTxs.take(3).toList();
+  }
 }

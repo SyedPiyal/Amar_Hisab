@@ -28,13 +28,17 @@ class TransactionAdapter extends TypeAdapter<Transaction> {
       debitAccountId: fields[8] as String?,
       isSplit: fields[9] as bool,
       splitDetails: (fields[10] as Map?)?.cast<String, double>(),
+      debtId: fields[11] as String?,
+      attachmentPaths: (fields[12] as List?)?.cast<String>(),
+      taxPercentage: fields[13] as double?,
+      taxAmount: fields[14] as double?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Transaction obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(15)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -56,7 +60,15 @@ class TransactionAdapter extends TypeAdapter<Transaction> {
       ..writeByte(9)
       ..write(obj.isSplit)
       ..writeByte(10)
-      ..write(obj.splitDetails);
+      ..write(obj.splitDetails)
+      ..writeByte(11)
+      ..write(obj.debtId)
+      ..writeByte(12)
+      ..write(obj.attachmentPaths)
+      ..writeByte(13)
+      ..write(obj.taxPercentage)
+      ..writeByte(14)
+      ..write(obj.taxAmount);
   }
 
   @override

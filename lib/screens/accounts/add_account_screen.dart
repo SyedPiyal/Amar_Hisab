@@ -7,7 +7,8 @@ import '../../providers/account_provider.dart';
 import '../../models/account.dart';
 
 class AddAccountScreen extends StatefulWidget {
-  const AddAccountScreen({super.key});
+  final String? initialType;
+  const AddAccountScreen({super.key, this.initialType});
 
   @override
   State<AddAccountScreen> createState() => _AddAccountScreenState();
@@ -16,7 +17,7 @@ class AddAccountScreen extends StatefulWidget {
 class _AddAccountScreenState extends State<AddAccountScreen> {
   final _nameController = TextEditingController();
   final _balanceController = TextEditingController();
-  String _selectedType = 'Assets';
+  late String _selectedType;
   Account? _selectedParentAccount;
 
   final Map<String, String> _typeDisplayNames = {
@@ -26,6 +27,12 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
     'Income': 'আয় (Income)',
     'Expenses': 'ব্যয় (Expenses)',
   };
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedType = widget.initialType ?? 'Assets';
+  }
 
   @override
   void dispose() {
