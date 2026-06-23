@@ -24,61 +24,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.dispose();
   }
 
-  void _showApiKeyDialog(BuildContext context, SettingsProvider provider) {
-    final controller = TextEditingController(text: provider.geminiApiKey);
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(
-            'Gemini API Key সেট করুন',
-            style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'AI ভয়েস এবং রসিদ স্ক্যানার ব্যবহারের জন্য আপনার Google AI Studio API Key প্রবেশ করান।',
-                style: GoogleFonts.hindSiliguri(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controller,
-                decoration: const InputDecoration(
-                  hintText: 'AIzaSy...',
-                  border: OutlineInputBorder(),
-                ),
-                style: GoogleFonts.inter(),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('বাতিল', style: GoogleFonts.hindSiliguri()),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                await provider.updateSettings(geminiApiKey: controller.text);
-                if (context.mounted) Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('API Key সফলভাবে আপডেট করা হয়েছে'),
-                  ),
-                );
-              },
-              child: Text('সংরক্ষণ করুন', style: GoogleFonts.hindSiliguri()),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   void _showOtpDialog(BuildContext context, SettingsProvider provider) {
     showDialog(
       context: context,

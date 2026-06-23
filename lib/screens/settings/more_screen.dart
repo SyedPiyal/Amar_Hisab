@@ -75,12 +75,12 @@ class MoreScreen extends StatelessWidget {
               Icons.person_outline_rounded,
               const ProfileScreen(),
             ),
-            _buildMenuItem(
-              context,
-              'সাবস্ক্রিপশন প্ল্যান',
-              Icons.card_membership_rounded,
-              const SubscriptionPlanScreen(),
-            ),
+            // _buildMenuItem(
+            //   context,
+            //   'সাবস্ক্রিপশন প্ল্যান',
+            //   Icons.card_membership_rounded,
+            //   const SubscriptionPlanScreen(),
+            // ),
           ]),
           const SizedBox(height: 24),
           _buildMenuSection('সেটিংস ও অন্যান্য', [
