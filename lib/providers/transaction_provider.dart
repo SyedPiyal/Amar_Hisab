@@ -86,4 +86,23 @@ class TransactionProvider with ChangeNotifier {
     todayTxs.sort((a, b) => b.amount.compareTo(a.amount));
     return todayTxs.take(3).toList();
   }
+
+  bool checkAnomaly(double amount, String category, String type) {
+    if (type != 'Expense' || _transactions.isEmpty) return false;
+    
+    final categoryTxs = _transactions.where((tx) => tx.category == category && tx.type == 'Expense').toList();
+    if (categoryTxs.isEmpty) return false;
+    
+    double total = 0;
+    for (var tx in categoryTxs) {
+      total += tx.amount;
+    }
+    double average = total / categoryTxs.length;
+    
+    // Flag as anomaly if amount is > 3x average AND amount is significant (> 500)
+    if (average > 0 && amount > (average * 3) && amount > 500) {
+      return true;
+    }
+    return false;
+  }
 }

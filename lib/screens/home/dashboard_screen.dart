@@ -17,7 +17,7 @@ import '../../providers/account_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/scheduled_transaction_provider.dart';
 import '../../services/ai_service.dart';
-import '../../widgets/ai_voice_dialog.dart';
+import '../ai_chat/chat_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -89,29 +89,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  void _showVoiceCommandDialog() async {
-    final settings = Provider.of<SettingsProvider>(context, listen: false).settings;
-    
-    final result = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (context) => AiVoiceDialog(apiKey: settings.geminiApiKey),
-    );
-
-    if (result != null && mounted) {
-      final parsedTitle = result['title'] ?? 'ভয়েস এন্ট্রি';
-      
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => AddTransactionScreen(
-            initialCategory: parsedTitle,
-            initialAmount: (result['amount'] ?? 0.0).toString(),
-          ),
-        ),
-      ).then((_) {
-        _loadAiAdvice();
-      });
-    }
+  void _openChatScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ChatScreen()),
+    ).then((_) {
+      _loadAiAdvice();
+    });
   }
 
   @override
@@ -133,11 +117,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.mic_none_rounded, color: AppColors.primary),
-            tooltip: 'AI Voice Command',
-            onPressed: _showVoiceCommandDialog,
-          ),
           IconButton(
             icon: const Icon(Icons.search_rounded),
             onPressed: () {
@@ -529,6 +508,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 20),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _openChatScreen,
+        backgroundColor: Colors.purple.shade600,
+        tooltip: 'AI Chat Assistant',
+        child: const Icon(Icons.auto_awesome_rounded, color: Colors.white),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,

@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:intl/intl.dart';
+import '../models/transaction.dart';
 
 class AiService {
   static const String _geminiModel = 'gemini-1.5-flash';
+
   // Use a demo API key here. Replace this with your actual key in production!
   static const String _demoApiKey =
       'AQ.Ab8RN6K1Xstwb4L1xZ-kpm4iWj7QCGfCIx1eZg06pa991qggJg';
@@ -190,6 +192,148 @@ Do not include subject lines, formatting, or placeholders. Just return the SMS t
     return _mockDueReminder(name, amount, dueDate, tone);
   }
 
+  static Future<String> chatWithAssistant({
+    required String message,
+    required List<Content> history,
+    required String apiKey,
+    required Future<Map<String, Object?>> Function(
+      String name,
+      Map<String, Object?> args,
+    )
+    onCallTool,
+  }) async {
+    final keyToUse = apiKey.isNotEmpty ? apiKey : _demoApiKey;
+
+    if (keyToUse == _demoApiKey || keyToUse == 'YOUR_GEMINI_API_KEY_HERE') {
+      return "দয়া করে একটি সঠিক API কী প্রদান করুন। ডেমো কী দিয়ে চ্যাটবট কাজ করবে না।";
+    }
+
+    try {
+      final addTransactionTool = FunctionDeclaration(
+        'addTransaction',
+        'Adds a new transaction (income or expense). Call this when user wants to add an expense or income.',
+        Schema(
+          SchemaType.object,
+          properties: {
+            'amount': Schema(
+              SchemaType.number,
+              description: 'Amount of transaction',
+            ),
+            'type': Schema(SchemaType.string, description: 'Expense or Income'),
+            'category': Schema(
+              SchemaType.string,
+              description: 'Category (e.g. Food, Transport, Salary)',
+            ),
+            'account': Schema(
+              SchemaType.string,
+              description: 'Account type (Cash or Bank)',
+            ),
+            'title': Schema(
+              SchemaType.string,
+              description: 'A short Bengali title for the transaction',
+            ),
+          },
+          requiredProperties: [
+            'amount',
+            'type',
+            'category',
+            'account',
+            'title',
+          ],
+        ),
+      );
+
+      final addDebtTool = FunctionDeclaration(
+        'addDebt',
+        'Adds a new debt/loan. Call this when user lends money to someone or borrows money from someone.',
+        Schema(
+          SchemaType.object,
+          properties: {
+            'personName': Schema(
+              SchemaType.string,
+              description: 'Name of the person',
+            ),
+            'amount': Schema(SchemaType.number, description: 'Amount of debt'),
+            'type': Schema(
+              SchemaType.string,
+              description:
+                  'Give or Take (Give if user lent money, Take if user borrowed)',
+            ),
+          },
+          requiredProperties: ['personName', 'amount', 'type'],
+        ),
+      );
+
+      final getSummaryTool = FunctionDeclaration(
+        'getFinancialSummary',
+        'Gets the current total income, total expense, and balance.',
+        Schema(SchemaType.object, properties: {}),
+      );
+
+      final tool = Tool(
+        functionDeclarations: [addTransactionTool, addDebtTool, getSummaryTool],
+      );
+
+      final model = GenerativeModel(
+        model: _geminiModel,
+        apiKey: keyToUse,
+        tools: [tool],
+        systemInstruction: Content.system(
+          'You are an expert Bengali financial assistant named Amar Hisab Assistant. You help users manage their money. When a user asks to add a transaction or debt, use the appropriate tool. Always reply in clear, professional Bengali.',
+        ),
+      );
+
+      final chat = model.startChat(history: history);
+      var response = await chat.sendMessage(Content.text(message));
+
+      if (response.functionCalls.isNotEmpty) {
+        final functionCall = response.functionCalls.first;
+        final result = await onCallTool(functionCall.name, functionCall.args);
+
+        response = await chat.sendMessage(
+          Content.functionResponse(functionCall.name, result),
+        );
+      }
+
+      return response.text ?? 'দুঃখিত, আমি বুঝতে পারিনি।';
+    } catch (e) {
+      return 'একটি ত্রুটি ঘটেছে: \$e';
+    }
+  }
+
+  static Future<String> predictCashFlow({
+    required double thisMonthIncome,
+    required double thisMonthExpense,
+    required double lastMonthIncome,
+    required double lastMonthExpense,
+    required String apiKey,
+  }) async {
+    final keyToUse = apiKey.isNotEmpty ? apiKey : _demoApiKey;
+
+    if (keyToUse == _demoApiKey || keyToUse == 'YOUR_GEMINI_API_KEY_HERE') {
+      return _mockPredictCashFlow();
+    }
+
+    try {
+      final model = GenerativeModel(model: _geminiModel, apiKey: keyToUse);
+
+      final prompt = '''
+Analyze the following cash flow data and provide a 2-3 sentence prediction for the upcoming month in Bengali.
+- Last Month Income: ৳\$lastMonthIncome
+- Last Month Expense: ৳\$lastMonthExpense
+- This Month Income: ৳\$thisMonthIncome
+- This Month Expense: ৳\$thisMonthExpense
+
+Tell the user if they are on track to save more, or if they are at risk of a cash shortage. Be professional and concise.
+''';
+
+      final response = await model.generateContent([Content.text(prompt)]);
+      return response.text ?? _mockPredictCashFlow();
+    } catch (_) {
+      return _mockPredictCashFlow();
+    }
+  }
+
   // MOCK FALLBACKS
   static Map<String, dynamic> _mockVoiceParse(String command) {
     double amount = 0.0;
@@ -322,5 +466,9 @@ Do not include subject lines, formatting, or placeholders. Just return the SMS t
       default:
         return 'আসসালামু আলাইকুম $name সাহেব, আপনার টালিখাতায় মোট বাকি রয়েছে ৳$amount। নির্ধারিত তারিখ ছিল: $dateStr। অনুগ্রহ করে বকেয়া পরিশোধ করুন। ধন্যবাদ।';
     }
+  }
+
+  static String _mockPredictCashFlow() {
+    return 'এআই প্রেডিকশন: গত মাসের তুলনায় আপনার খরচ বৃদ্ধি পেয়েছে। এই ধারা অব্যাহত থাকলে আগামী মাসে নগদ অর্থের ঘাটতি হতে পারে। দয়া করে অপ্রয়োজনীয় খরচ কমান।';
   }
 }

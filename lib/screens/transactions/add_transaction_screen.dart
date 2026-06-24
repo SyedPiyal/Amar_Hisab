@@ -623,6 +623,29 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     }
 
     if (isValid) {
+      final txProvider = Provider.of<TransactionProvider>(context, listen: false);
+      final mappedType = _type == 'আয়' ? 'Income' : (_type == 'ব্যয়' ? 'Expense' : 'Transfer');
+
+      // Anomaly Detection
+      if (txProvider.checkAnomaly(_amount, title, mappedType)) {
+        bool? confirm = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('অস্বাভাবিক লেনদেন', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold, color: AppColors.error)),
+            content: Text('এই ক্যাটাগরিতে (৳$_amount) পরিমাণটি স্বাভাবিক গড়ের চেয়ে অনেক বেশি। আপনি কি নিশ্চিত যে এটি সঠিক?', style: GoogleFonts.hindSiliguri()),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('বাতিল')),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true), 
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.error), 
+                child: const Text('নিশ্চিত করুন', style: TextStyle(color: Colors.white))
+              ),
+            ],
+          ),
+        );
+        if (confirm != true) return;
+      }
+
       Map<String, double> splitMap = {};
       if (_isSplit) {
         for (var item in _splitItems) {
@@ -638,7 +661,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         accountId: isAdvanced ? _toAccount!.id : _selectedAccount!.id,
         creditAccountId: isAdvanced ? _fromAccount!.id : null,
         debitAccountId: isAdvanced ? _toAccount!.id : null,
-        type: _type == 'আয়' ? 'Income' : (_type == 'ব্যয়' ? 'Expense' : 'Transfer'),
+        type: mappedType,
         category: title,
         isSplit: _isSplit,
         splitDetails: _isSplit ? splitMap : null,
@@ -647,7 +670,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         taxAmount: _taxAmount > 0 ? _taxAmount : null,
       );
 
-      await Provider.of<TransactionProvider>(context, listen: false).addTransaction(
+      await txProvider.addTransaction(
         tx,
         isAdvanced ? _toAccount! : _selectedAccount!,
         creditAccount: isAdvanced ? _fromAccount : null,

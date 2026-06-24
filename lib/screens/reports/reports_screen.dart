@@ -11,6 +11,8 @@ import 'profit_loss_screen.dart';
 import 'account_balances_screen.dart';
 
 import '../../services/export_service.dart';
+import '../../services/ai_service.dart';
+import '../../providers/settings_provider.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -207,6 +209,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   ],
                 ),
               ),
+            ),
+            const SizedBox(height: 16),
+
+            // AI Prediction Card
+            Consumer<TransactionProvider>(
+              builder: (context, provider, _) {
+                if (provider.transactions.isEmpty) return const SizedBox();
+                return _AiPredictionCard(transactions: provider.transactions);
+              },
             ),
             const SizedBox(height: 32),
 
@@ -654,6 +665,107 @@ class _ReportsScreenState extends State<ReportsScreen> {
             ],
           ),
           Text(percentage, style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+}
+
+class _AiPredictionCard extends StatefulWidget {
+  final List<Transaction> transactions;
+  const _AiPredictionCard({required this.transactions});
+
+  @override
+  State<_AiPredictionCard> createState() => _AiPredictionCardState();
+}
+
+class _AiPredictionCardState extends State<_AiPredictionCard> {
+  String _prediction = '';
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPrediction();
+  }
+
+  Future<void> _loadPrediction() async {
+    final settings = Provider.of<SettingsProvider>(context, listen: false).settings;
+    
+    double thisMonthIncome = 0;
+    double thisMonthExpense = 0;
+    double lastMonthIncome = 0;
+    double lastMonthExpense = 0;
+    
+    final now = DateTime.now();
+    for (var tx in widget.transactions) {
+      if (tx.date.month == now.month && tx.date.year == now.year) {
+        if (tx.type == 'Income') thisMonthIncome += tx.amount;
+        if (tx.type == 'Expense') thisMonthExpense += tx.amount;
+      } else if (tx.date.month == now.month - 1 || (now.month == 1 && tx.date.month == 12 && tx.date.year == now.year - 1)) {
+        if (tx.type == 'Income') lastMonthIncome += tx.amount;
+        if (tx.type == 'Expense') lastMonthExpense += tx.amount;
+      }
+    }
+
+    final result = await AiService.predictCashFlow(
+      thisMonthIncome: thisMonthIncome,
+      thisMonthExpense: thisMonthExpense,
+      lastMonthIncome: lastMonthIncome,
+      lastMonthExpense: lastMonthExpense,
+      apiKey: settings.geminiApiKey,
+    );
+
+    if (mounted) {
+      setState(() {
+        _prediction = result;
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.auto_awesome, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text(
+                'এআই ক্যাশ ফ্লো প্রেডিকশন',
+                style: GoogleFonts.hindSiliguri(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            _prediction,
+            style: GoogleFonts.hindSiliguri(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+              height: 1.5,
+            ),
+          ),
         ],
       ),
     );

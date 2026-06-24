@@ -206,11 +206,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             settings.notificationsEnabled,
             (val) => settings.updateSettings(notificationsEnabled: val),
           ),
-          _buildToggleItem(
-            'বায়োমেট্রিক লগইন',
-            settings.biometricEnabled,
-            (val) => settings.updateSettings(biometricEnabled: val),
-          ),
+
           _buildSelectorItem(
             'ভাষা (Language)',
             settings.language == 'bn' ? 'বাংলা (Bangla)' : 'English',
