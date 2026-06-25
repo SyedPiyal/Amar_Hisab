@@ -191,25 +191,25 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.fingerprint_rounded,
-                        size: 48,
-                        color: AppColors.primary,
-                      ),
-                      onPressed: () {},
-                    ),
-                    Text(
-                      'ফিঙ্গারপ্রিন্ট ব্যবহার করুন',
-                      style: GoogleFonts.hindSiliguri(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
+                    // IconButton(
+                    //   icon: const Icon(
+                    //     Icons.fingerprint_rounded,
+                    //     size: 48,
+                    //     color: AppColors.primary,
+                    //   ),
+                    //   onPressed: () {},
+                    // ),
+                    // Text(
+                    //   'ফিঙ্গারপ্রিন্ট ব্যবহার করুন',
+                    //   style: GoogleFonts.hindSiliguri(
+                    //     fontSize: 12,
+                    //     color: AppColors.textSecondary,
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
-              const SizedBox(height: 48),
+              // const SizedBox(height: 48),
 
               // Don't have an account?
               Row(

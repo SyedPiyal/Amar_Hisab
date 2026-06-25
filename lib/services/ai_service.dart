@@ -204,7 +204,7 @@ Do not include subject lines, formatting, or placeholders. Just return the SMS t
   }) async {
     final keyToUse = apiKey.isNotEmpty ? apiKey : _demoApiKey;
 
-    if (keyToUse == _demoApiKey || keyToUse == 'YOUR_GEMINI_API_KEY_HERE') {
+    if (keyToUse == 'AQ.Ab8RN6K1Xstwb4L1xZ-kpm4iWj7QCGfCIx1eZg06pa991qggJg' || keyToUse == 'AQ.Ab8RN6K1Xstwb4L1xZ-kpm4iWj7QCGfCIx1eZg06pa991qggJg') {
       return "দয়া করে একটি সঠিক API কী প্রদান করুন। ডেমো কী দিয়ে চ্যাটবট কাজ করবে না।";
     }
 
@@ -310,7 +310,7 @@ Do not include subject lines, formatting, or placeholders. Just return the SMS t
   }) async {
     final keyToUse = apiKey.isNotEmpty ? apiKey : _demoApiKey;
 
-    if (keyToUse == _demoApiKey || keyToUse == 'YOUR_GEMINI_API_KEY_HERE') {
+    if (keyToUse == 'AQ.Ab8RN6K1Xstwb4L1xZ-kpm4iWj7QCGfCIx1eZg06pa991qggJg' || keyToUse == 'YOUR_GEMINI_API_KEY_HERE') {
       return _mockPredictCashFlow();
     }
 
