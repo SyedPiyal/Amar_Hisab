@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
-import '../../providers/settings_provider.dart';
+import 'provider/settings_provider.dart';
 import '../accounts/coa_screen.dart';
 import '../accounts/reconciliation_screen.dart';
 

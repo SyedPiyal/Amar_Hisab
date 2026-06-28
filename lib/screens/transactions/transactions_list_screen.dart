@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
 import '../../theme/app_colors.dart';
-import '../../providers/transaction_provider.dart';
+import 'provider/transaction_provider.dart';
 import '../../models/transaction.dart' as app_models;
 
 class TransactionsListScreen extends StatefulWidget {

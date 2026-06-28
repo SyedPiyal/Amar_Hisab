@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
 import '../../theme/app_colors.dart';
-import '../../providers/account_provider.dart';
-import '../../providers/settings_provider.dart';
+import '../accounts/provider/account_provider.dart';
+import '../settings/provider/settings_provider.dart';
 import '../../services/pdf_service.dart';
 
 class AccountBalancesScreen extends StatelessWidget {

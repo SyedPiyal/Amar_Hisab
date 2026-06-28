@@ -12,10 +12,10 @@ import '../transactions/add_transaction_screen.dart';
 import '../settings/more_screen.dart';
 import 'search_screen.dart';
 import 'notifications_screen.dart';
-import '../../providers/settings_provider.dart';
-import '../../providers/account_provider.dart';
-import '../../providers/transaction_provider.dart';
-import '../../providers/scheduled_transaction_provider.dart';
+import '../settings/provider/settings_provider.dart';
+import '../accounts/provider/account_provider.dart';
+import '../transactions/provider/transaction_provider.dart';
+import '../transactions/provider/scheduled_transaction_provider.dart';
 import '../../services/ai_service.dart';
 import '../ai_chat/chat_screen.dart';
 

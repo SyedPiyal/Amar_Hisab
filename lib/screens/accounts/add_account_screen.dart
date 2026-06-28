@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../theme/app_colors.dart';
-import '../../providers/account_provider.dart';
+import 'provider/account_provider.dart';
 import '../../models/account.dart';
 
 class AddAccountScreen extends StatefulWidget {

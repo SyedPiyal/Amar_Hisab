@@ -3,8 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_colors.dart';
-import '../../providers/budget_provider.dart';
-import '../../providers/transaction_provider.dart';
+import 'provider/budget_provider.dart';
+import '../transactions/provider/transaction_provider.dart';
 import 'add_budget_screen.dart';
 
 class BudgetsScreen extends StatelessWidget {

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
-import '../../providers/debt_provider.dart';
-import '../../providers/account_provider.dart';
+import 'provider/debt_provider.dart';
+import '../accounts/provider/account_provider.dart';
 import '../../models/account.dart';
 
 class AddDebtScreen extends StatefulWidget {

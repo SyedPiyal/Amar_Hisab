@@ -4,8 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_colors.dart';
-import '../../providers/transaction_provider.dart';
-import '../../providers/account_provider.dart';
+import '../transactions/provider/transaction_provider.dart';
+import 'provider/account_provider.dart';
 import '../../models/transaction.dart';
 import '../../models/account.dart';
 

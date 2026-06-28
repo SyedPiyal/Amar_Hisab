@@ -5,8 +5,8 @@ import 'package:intl/intl.dart';
 import '../../theme/app_colors.dart';
 import '../../models/scheduled_transaction.dart';
 import '../../models/account.dart';
-import '../../providers/scheduled_transaction_provider.dart';
-import '../../providers/account_provider.dart';
+import 'provider/scheduled_transaction_provider.dart';
+import '../accounts/provider/account_provider.dart';
 
 class ScheduledTransactionsScreen extends StatefulWidget {
   const ScheduledTransactionsScreen({super.key});

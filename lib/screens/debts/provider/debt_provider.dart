@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
-import '../models/debt.dart';
-import '../models/transaction.dart';
-import '../models/account.dart';
+import '../../../models/debt.dart';
+import '../../../models/transaction.dart';
+import '../../../models/account.dart';
 
 class DebtProvider with ChangeNotifier {
   static const String boxName = 'debts';

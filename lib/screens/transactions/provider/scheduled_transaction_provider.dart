@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
-import '../models/scheduled_transaction.dart';
-import '../models/transaction.dart';
-import '../models/account.dart';
-import './transaction_provider.dart';
-import './account_provider.dart';
+import '../../../models/scheduled_transaction.dart';
+import '../../../models/transaction.dart';
+import '../../../models/account.dart';
+import 'transaction_provider.dart';
+import '../../accounts/provider/account_provider.dart';
 
 class ScheduledTransactionProvider with ChangeNotifier {
   static const String boxName = 'scheduled_transactions';

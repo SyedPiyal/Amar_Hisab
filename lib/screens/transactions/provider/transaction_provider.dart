@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
-import '../models/transaction.dart';
-import '../models/account.dart';
+import '../../../models/transaction.dart';
+import '../../../models/account.dart';
 
 class TransactionProvider with ChangeNotifier {
   static const String boxName = 'transactions';

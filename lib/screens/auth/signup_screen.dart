@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../theme/app_colors.dart';
 import 'setup_wizard_screen.dart';
-import '../../providers/auth_provider.dart';
+import 'provider/auth_provider.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});

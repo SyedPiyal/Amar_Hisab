@@ -5,14 +5,14 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
 import '../../theme/app_colors.dart';
-import '../../providers/transaction_provider.dart';
+import '../transactions/provider/transaction_provider.dart';
 import '../../models/transaction.dart';
 import 'profit_loss_screen.dart';
 import 'account_balances_screen.dart';
 
 import '../../services/export_service.dart';
 import '../../services/ai_service.dart';
-import '../../providers/settings_provider.dart';
+import '../settings/provider/settings_provider.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});

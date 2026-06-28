@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import '../models/budget.dart';
+import '../../../models/budget.dart';
 
 class BudgetProvider with ChangeNotifier {
   late Box<Budget> _budgetBox;

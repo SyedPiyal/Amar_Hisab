@@ -5,8 +5,8 @@ import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../home/dashboard_screen.dart';
 import '../../models/account.dart';
-import '../../providers/account_provider.dart';
-import '../../providers/settings_provider.dart';
+import '../accounts/provider/account_provider.dart';
+import '../settings/provider/settings_provider.dart';
 
 class SetupWizardScreen extends StatefulWidget {
   const SetupWizardScreen({super.key});

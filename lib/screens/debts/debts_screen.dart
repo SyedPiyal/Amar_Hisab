@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_colors.dart';
-import '../../providers/debt_provider.dart';
+import 'provider/debt_provider.dart';
 import '../../models/debt.dart';
 import 'add_debt_screen.dart';
 import 'debt_details_screen.dart';

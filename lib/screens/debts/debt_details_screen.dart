@@ -4,10 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../theme/app_colors.dart';
-import '../../providers/debt_provider.dart';
-import '../../providers/transaction_provider.dart';
-import '../../providers/account_provider.dart';
-import '../../providers/settings_provider.dart';
+import 'provider/debt_provider.dart';
+import '../transactions/provider/transaction_provider.dart';
+import '../accounts/provider/account_provider.dart';
+import '../settings/provider/settings_provider.dart';
 import '../../models/debt.dart';
 import '../../models/transaction.dart';
 import '../../models/account.dart';
@@ -25,7 +25,11 @@ class _DebtDetailsScreenState extends State<DebtDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => Provider.of<TransactionProvider>(context, listen: false).loadTransactions());
+    Future.microtask(() {
+      if (mounted) {
+        Provider.of<TransactionProvider>(context, listen: false).loadTransactions();
+      }
+    });
   }
 
   void _sendAiTagada(BuildContext context) {
@@ -36,7 +40,7 @@ class _DebtDetailsScreenState extends State<DebtDetailsScreen> {
       return;
     }
 
-    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final settings = Provider.of<SettingsProvider>(context, listen: false).settings;
 
     showModalBottomSheet(
       context: context,
@@ -54,7 +58,11 @@ class _DebtDetailsScreenState extends State<DebtDetailsScreen> {
             children: [
               Text(
                 'তগাদা মেসেজের ধরণ নির্বাচন করুন',
-                style: GoogleFonts.hindSiliguri(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary),
+                style: GoogleFonts.hindSiliguri(
+                  fontSize: 18, 
+                  fontWeight: FontWeight.bold, 
+                  color: AppColors.primary
+                ),
               ),
               const SizedBox(height: 16),
               ListTile(
@@ -228,7 +236,8 @@ class _DebtDetailsScreenState extends State<DebtDetailsScreen> {
                     child: ElevatedButton(
                       onPressed: () async {
                         if (paymentAmount > 0 && selectedAccount != null) {
-                          await Provider.of<DebtProvider>(context, listen: false).addPayment(
+                          final debtProvider = Provider.of<DebtProvider>(context, listen: false);
+                          await debtProvider.addPayment(
                             widget.debt,
                             paymentAmount,
                             selectedAccount!,
@@ -278,8 +287,9 @@ class _DebtDetailsScreenState extends State<DebtDetailsScreen> {
                   ],
                 ),
               );
-              if (confirm == true) {
-                await Provider.of<DebtProvider>(context, listen: false).deleteDebt(widget.debt);
+              if (confirm == true && mounted) {
+                final debtProvider = Provider.of<DebtProvider>(context, listen: false);
+                await debtProvider.deleteDebt(widget.debt);
                 if (mounted) Navigator.pop(context);
               }
             },
@@ -373,44 +383,57 @@ class _DebtDetailsScreenState extends State<DebtDetailsScreen> {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  widget.debt.type == 'Receivable' ? Icons.call_received_rounded : Icons.call_made_rounded,
+                  widget.debt.type == 'Receivable' ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
                   color: widget.debt.type == 'Receivable' ? AppColors.success : AppColors.error,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 32),
-          _buildInfoRow('মোট পরিমাণ:', '৳ ${NumberFormat('#,###').format(widget.debt.amount)}'),
-          const Divider(height: 32),
-          _buildInfoRow('অবশিষ্ট:', '৳ ${NumberFormat('#,###').format(widget.debt.remainingAmount)}', isBold: true),
-          const Divider(height: 32),
-          _buildInfoRow('শুরু হয়েছে:', DateFormat('dd MMM yyyy').format(widget.debt.date)),
-          if (widget.debt.dueDate != null) ...[
-            const Divider(height: 32),
-            _buildInfoRow('শেষ তারিখ:', DateFormat('dd MMM yyyy').format(widget.debt.dueDate!)),
-          ],
-          if (widget.debt.note != null && widget.debt.note!.isNotEmpty) ...[
-            const Divider(height: 32),
-            _buildInfoRow('নোট:', widget.debt.note!),
-          ],
+          const SizedBox(height: 24),
+          const Divider(),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildStatItem('মোট পরিমাণ', '৳${widget.debt.amount.toStringAsFixed(0)}'),
+              _buildStatItem('অবশিষ্ট', '৳${widget.debt.remainingAmount.toStringAsFixed(0)}', color: AppColors.primary),
+            ],
+          ),
+          const SizedBox(height: 24),
           if (widget.debt.phoneNumber != null && widget.debt.phoneNumber!.isNotEmpty) ...[
-            const Divider(height: 32),
-            _buildInfoRow('মোবাইল নম্বর:', widget.debt.phoneNumber!),
-          ],
-          if (widget.debt.type == 'Receivable' && widget.debt.status != 'Settled') ...[
-            const Divider(height: 32),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton.icon(
-                onPressed: () => _sendAiTagada(context),
-                icon: const Icon(Icons.rocket_launch_rounded, color: Colors.white, size: 18),
-                label: Text('এআই তগাদা (SMS/WhatsApp Remind)', style: GoogleFonts.hindSiliguri(color: Colors.white, fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            const Divider(),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _sendAiTagada(context),
+                    icon: const Icon(Icons.auto_awesome, size: 18),
+                    label: Text('এআই তগাদা', style: GoogleFonts.hindSiliguri()),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple.shade50,
+                      foregroundColor: Colors.purple,
+                      elevation: 0,
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final uri = Uri.parse('tel:${widget.debt.phoneNumber}');
+                      if (await canLaunchUrl(uri)) await launchUrl(uri);
+                    },
+                    icon: const Icon(Icons.phone, size: 18),
+                    label: Text('কল করুন', style: GoogleFonts.hindSiliguri()),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade50,
+                      foregroundColor: Colors.blue,
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ],
@@ -418,17 +441,20 @@ class _DebtDetailsScreenState extends State<DebtDetailsScreen> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value, {bool isBold = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildStatItem(String label, String value, {Color? color}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: GoogleFonts.hindSiliguri(color: AppColors.textSecondary)),
+        Text(
+          label,
+          style: GoogleFonts.hindSiliguri(color: AppColors.textSecondary, fontSize: 14),
+        ),
         Text(
           value,
-          style: GoogleFonts.inter(
-            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-            fontSize: isBold ? 18 : 14,
-            color: isBold ? AppColors.primary : AppColors.textPrimary,
+          style: GoogleFonts.hindSiliguri(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: color ?? AppColors.textPrimary,
           ),
         ),
       ],
@@ -436,22 +462,45 @@ class _DebtDetailsScreenState extends State<DebtDetailsScreen> {
   }
 
   Widget _buildHistoryItem(Transaction tx) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 0,
-      color: Colors.white,
-      child: ListTile(
-        leading: Icon(
-          tx.type == 'Income' ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
-          color: tx.type == 'Income' ? AppColors.success : AppColors.error,
-        ),
-        title: Text(tx.title, style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.w500)),
-        subtitle: Text(DateFormat('dd MMM yyyy').format(tx.date), style: GoogleFonts.inter(fontSize: 12)),
-        trailing: Text(
-          '৳ ${NumberFormat('#,###').format(tx.amount)}',
-          style: GoogleFonts.inter(fontWeight: FontWeight.bold),
-        ),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.payment_rounded, color: AppColors.success, size: 20),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'কিস্তি জমা',
+                  style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  DateFormat('dd MMMM, yyyy').format(tx.date),
+                  style: GoogleFonts.hindSiliguri(color: AppColors.textSecondary, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            '৳${tx.amount.toStringAsFixed(0)}',
+            style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold, color: AppColors.success),
+          ),
+        ],
       ),
     );
   }

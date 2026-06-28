@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../theme/app_colors.dart';
 import 'add_account_screen.dart';
-import '../../providers/account_provider.dart';
+import 'provider/account_provider.dart';
 import '../../models/account.dart';
 
 class AccountsOverviewScreen extends StatelessWidget {

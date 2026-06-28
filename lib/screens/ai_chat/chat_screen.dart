@@ -8,10 +8,10 @@ import '../../theme/app_colors.dart';
 import '../../models/chat_message.dart';
 import '../../models/transaction.dart';
 import '../../models/account.dart';
-import '../../providers/settings_provider.dart';
-import '../../providers/transaction_provider.dart';
-import '../../providers/account_provider.dart';
-import '../../providers/debt_provider.dart';
+import '../settings/provider/settings_provider.dart';
+import '../transactions/provider/transaction_provider.dart';
+import '../accounts/provider/account_provider.dart';
+import '../debts/provider/debt_provider.dart';
 import '../../services/ai_service.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -99,6 +99,10 @@ class _ChatScreenState extends State<ChatScreen> {
           isUser: false,
           timestamp: DateTime.now(),
         ));
+        
+        // Update history for multi-turn conversation
+        _history.add(Content.text(text));
+        _history.add(Content.model([TextPart(responseText)]));
       });
       _scrollToBottom();
     }
@@ -212,11 +216,13 @@ class _ChatScreenState extends State<ChatScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.info_outline, color: AppColors.primary),
+            icon: const Icon(Icons.refresh, color: AppColors.primary),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('আপনি ভয়েস বা টেক্সটের মাধ্যমে হিসাব যোগ করতে পারেন।')),
-              );
+              setState(() {
+                _messages.clear();
+                _history.clear();
+                _addSystemMessage("হ্যালো! আমি আপনার এআই ফাইন্যান্সিয়াল অ্যাসিস্ট্যান্ট। আমাকে হিসাব যোগ করতে বা ব্যালেন্স সম্পর্কে জিজ্ঞাসা করতে পারেন।");
+              });
             },
           )
         ],
@@ -262,7 +268,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 5,
               offset: const Offset(0, 2),
             ),
@@ -287,7 +293,7 @@ class _ChatScreenState extends State<ChatScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),

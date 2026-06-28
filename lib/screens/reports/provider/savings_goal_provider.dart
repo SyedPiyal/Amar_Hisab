@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import '../models/savings_goal.dart';
+import '../../../models/savings_goal.dart';
 
 class SavingsGoalProvider with ChangeNotifier {
   late Box<SavingsGoal> _goalBox;

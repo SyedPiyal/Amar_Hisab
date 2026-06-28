@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
-import '../models/user.dart';
+import '../../../models/user.dart';
 
 class AuthProvider with ChangeNotifier {
   static const String _usersBoxName = 'users';

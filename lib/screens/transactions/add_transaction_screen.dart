@@ -6,9 +6,9 @@ import 'package:image_picker/image_picker.dart';
 import '../../theme/app_colors.dart';
 import '../../models/transaction.dart';
 import '../../models/account.dart';
-import '../../providers/transaction_provider.dart';
-import '../../providers/account_provider.dart';
-import '../../providers/settings_provider.dart';
+import 'provider/transaction_provider.dart';
+import '../accounts/provider/account_provider.dart';
+import '../settings/provider/settings_provider.dart';
 import '../../services/ai_service.dart';
 import '../../widgets/ai_voice_dialog.dart';
 

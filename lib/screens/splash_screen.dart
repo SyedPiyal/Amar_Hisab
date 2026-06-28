@@ -5,10 +5,10 @@ import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
 import 'auth/login_screen.dart';
 import 'home/dashboard_screen.dart';
-import '../providers/account_provider.dart';
-import '../providers/transaction_provider.dart';
-import '../providers/auth_provider.dart';
-import '../providers/settings_provider.dart';
+import 'accounts/provider/account_provider.dart';
+import 'transactions/provider/transaction_provider.dart';
+import 'auth/provider/auth_provider.dart';
+import 'settings/provider/settings_provider.dart';
 import 'auth/intro_screen.dart';
 
 class SplashScreen extends StatefulWidget {

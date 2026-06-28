@@ -15,7 +15,7 @@ import '../debts/debts_screen.dart';
 import 'category_management_screen.dart';
 import '../profile/subscription_plan_screen.dart';
 import '../help/user_manual_screen.dart';
-import '../../providers/auth_provider.dart';
+import '../auth/provider/auth_provider.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});

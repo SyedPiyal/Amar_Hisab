@@ -15,14 +15,14 @@ import 'models/debt.dart';
 import 'models/budget.dart';
 import 'models/scheduled_transaction.dart';
 import 'models/savings_goal.dart';
-import 'providers/account_provider.dart';
-import 'providers/transaction_provider.dart';
-import 'providers/auth_provider.dart';
-import 'providers/settings_provider.dart';
-import 'providers/debt_provider.dart';
-import 'providers/budget_provider.dart';
-import 'providers/scheduled_transaction_provider.dart';
-import 'providers/savings_goal_provider.dart';
+import 'screens/accounts/provider/account_provider.dart';
+import 'screens/transactions/provider/transaction_provider.dart';
+import 'screens/auth/provider/auth_provider.dart';
+import 'screens/settings/provider/settings_provider.dart';
+import 'screens/debts/provider/debt_provider.dart';
+import 'screens/reports/provider/budget_provider.dart';
+import 'screens/transactions/provider/scheduled_transaction_provider.dart';
+import 'screens/reports/provider/savings_goal_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

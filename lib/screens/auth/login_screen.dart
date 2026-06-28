@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import 'signup_screen.dart';
 import '../home/dashboard_screen.dart';
-import '../../providers/auth_provider.dart';
+import 'provider/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../models/savings_goal.dart';
-import '../../providers/savings_goal_provider.dart';
+import 'provider/savings_goal_provider.dart';
 import '../../theme/app_colors.dart';
 
 class SavingsGoalsScreen extends StatelessWidget {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import '../models/app_settings.dart';
+import '../../../models/app_settings.dart';
 
 class SettingsProvider with ChangeNotifier {
   late Box<AppSettings> _settingsBox;
