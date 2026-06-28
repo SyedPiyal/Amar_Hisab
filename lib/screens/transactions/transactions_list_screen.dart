@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../theme/app_colors.dart';
 import 'provider/transaction_provider.dart';
 import '../../models/transaction.dart' as app_models;
+import 'add_transaction_screen.dart';
 
 class TransactionsListScreen extends StatefulWidget {
   const TransactionsListScreen({super.key});
@@ -16,29 +17,136 @@ class TransactionsListScreen extends StatefulWidget {
 
 class _TransactionsListScreenState extends State<TransactionsListScreen> {
   String _selectedFilter = 'সবগুলো';
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    // Load transactions when the screen is initialized
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<TransactionProvider>(context, listen: false).loadTransactions();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _showFilterOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'ফিল্টার নির্বাচন করুন',
+                  style: GoogleFonts.hindSiliguri(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.list_rounded),
+                title: Text('সবগুলো', style: GoogleFonts.hindSiliguri()),
+                onTap: () {
+                  setState(() => _selectedFilter = 'সবগুলো');
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.arrow_downward_rounded, color: AppColors.success),
+                title: Text('আয় (Income)', style: GoogleFonts.hindSiliguri()),
+                onTap: () {
+                  setState(() => _selectedFilter = 'আয়');
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.arrow_upward_rounded, color: AppColors.error),
+                title: Text('ব্যয় (Expense)', style: GoogleFonts.hindSiliguri()),
+                onTap: () {
+                  setState(() => _selectedFilter = 'ব্যয়');
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.swap_horiz_rounded, color: AppColors.primary),
+                title: Text('ট্রান্সফার (Transfer)', style: GoogleFonts.hindSiliguri()),
+                onTap: () {
+                  setState(() => _selectedFilter = 'ট্রান্সফার');
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(
-          'লেনদেনের তালিকা',
-          style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold),
-        ),
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'লেনদেন খুঁজুন...',
+                  hintStyle: GoogleFonts.hindSiliguri(color: AppColors.textSecondary, fontSize: 16),
+                  border: InputBorder.none,
+                ),
+                style: GoogleFonts.hindSiliguri(),
+                onChanged: (val) {
+                  setState(() {
+                    _searchQuery = val;
+                  });
+                },
+              )
+            : Text(
+                'লেনদেনের তালিকা',
+                style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold),
+              ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list_rounded),
-            onPressed: () {},
+            icon: Icon(_isSearching ? Icons.close : Icons.search_rounded),
+            onPressed: () {
+              setState(() {
+                if (_isSearching) {
+                  _isSearching = false;
+                  _searchQuery = '';
+                  _searchController.clear();
+                } else {
+                  _isSearching = true;
+                }
+              });
+            },
           ),
-          IconButton(icon: const Icon(Icons.search_rounded), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.filter_list_rounded),
+            onPressed: _showFilterOptions,
+          ),
         ],
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       body: Column(
         children: [
-          // Filter Tabs
+          // Filter Tabs (Chips)
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -56,36 +164,47 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
             child: Consumer<TransactionProvider>(
               builder: (context, provider, child) {
                 final allTransactions = provider.transactions;
-                List<app_models.Transaction> filtered = [];
-
-                if (_selectedFilter == 'সবগুলো') {
-                  filtered = allTransactions;
-                } else if (_selectedFilter == 'আয়') {
-                  filtered = allTransactions
-                      .where((t) => t.type == 'Income')
-                      .toList();
+                
+                // 1. Filter by Type
+                List<app_models.Transaction> filtered = allTransactions;
+                if (_selectedFilter == 'আয়') {
+                  filtered = filtered.where((t) => t.type == 'Income').toList();
                 } else if (_selectedFilter == 'ব্যয়') {
-                  filtered = allTransactions
-                      .where((t) => t.type == 'Expense')
-                      .toList();
-                } else {
-                  filtered = allTransactions
-                      .where((t) => t.type == 'Transfer')
+                  filtered = filtered.where((t) => t.type == 'Expense').toList();
+                } else if (_selectedFilter == 'ট্রান্সফার') {
+                  filtered = filtered.where((t) => t.type == 'Transfer').toList();
+                }
+
+                // 2. Filter by Search Query
+                if (_searchQuery.isNotEmpty) {
+                  filtered = filtered
+                      .where((t) => t.title
+                          .toLowerCase()
+                          .contains(_searchQuery.toLowerCase()))
                       .toList();
                 }
 
                 if (filtered.isEmpty) {
                   return Center(
-                    child: Text(
-                      'কোন লেনদেন নেই',
-                      style: GoogleFonts.hindSiliguri(
-                        color: AppColors.textSecondary,
-                      ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.receipt_long_outlined, size: 64, color: AppColors.border),
+                        const SizedBox(height: 16),
+                        Text(
+                          _searchQuery.isEmpty ? 'কোন লেনদেন নেই' : 'কোন ফলাফল পাওয়া যায়নি',
+                          style: GoogleFonts.hindSiliguri(
+                            color: AppColors.textSecondary,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 }
 
                 return ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 80),
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
                     return _buildTransactionCard(filtered[index]);
@@ -97,12 +216,22 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AddTransactionScreen()),
+          ).then((_) {
+            // Refresh list when returning from add screen
+            if (mounted) {
+              Provider.of<TransactionProvider>(context, listen: false).loadTransactions();
+            }
+          });
+        },
         backgroundColor: AppColors.primary,
         icon: const Icon(Icons.add, color: Colors.white),
         label: Text(
           'নতুন লেনদেন',
-          style: GoogleFonts.hindSiliguri(color: Colors.white),
+          style: GoogleFonts.hindSiliguri(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -140,6 +269,8 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
 
   Widget _buildTransactionCard(app_models.Transaction tx) {
     bool isIncome = tx.type == 'Income';
+    bool isTransfer = tx.type == 'Transfer';
+    
     final balanceFormat = NumberFormat.currency(
       locale: 'bn_BD',
       symbol: '৳ ',
@@ -147,22 +278,36 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
     );
     final dateFormat = DateFormat('dd MMM, yyyy - hh:mm a');
 
+    IconData iconData = Icons.shopping_bag_outlined;
+    Color iconColor = AppColors.error;
+    
+    if (isIncome) {
+      iconData = Icons.arrow_downward_rounded;
+      iconColor = AppColors.success;
+    } else if (isTransfer) {
+      iconData = Icons.swap_horiz_rounded;
+      iconColor = AppColors.primary;
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: AppColors.border, width: 0.5),
+        ),
         child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           leading: Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: (isIncome ? AppColors.success : AppColors.error)
-                  .withValues(alpha: 0.1),
+              color: iconColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
-              isIncome
-                  ? Icons.arrow_downward_rounded
-                  : Icons.shopping_bag_outlined,
-              color: isIncome ? AppColors.success : AppColors.error,
+              iconData,
+              color: iconColor,
               size: 20,
             ),
           ),
@@ -173,14 +318,14 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
           subtitle: Text(
             dateFormat.format(tx.date),
             style: GoogleFonts.hindSiliguri(
-              fontSize: 12,
+              fontSize: 11,
               color: AppColors.textSecondary,
             ),
           ),
           trailing: Text(
-            '${isIncome ? '+' : '-'} ${balanceFormat.format(tx.amount)}',
+            '${isIncome ? '+' : (isTransfer ? '' : '-')} ${balanceFormat.format(tx.amount)}',
             style: TextStyle(
-              color: isIncome ? AppColors.success : AppColors.error,
+              color: isIncome ? AppColors.success : (isTransfer ? AppColors.primary : AppColors.error),
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),
