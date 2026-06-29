@@ -32,13 +32,15 @@ class TransactionAdapter extends TypeAdapter<Transaction> {
       attachmentPaths: (fields[12] as List?)?.cast<String>(),
       taxPercentage: fields[13] as double?,
       taxAmount: fields[14] as double?,
+      inventoryItemId: fields[15] as String?,
+      inventoryQuantity: fields[16] as double?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Transaction obj) {
     writer
-      ..writeByte(15)
+      ..writeByte(17)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -68,7 +70,11 @@ class TransactionAdapter extends TypeAdapter<Transaction> {
       ..writeByte(13)
       ..write(obj.taxPercentage)
       ..writeByte(14)
-      ..write(obj.taxAmount);
+      ..write(obj.taxAmount)
+      ..writeByte(15)
+      ..write(obj.inventoryItemId)
+      ..writeByte(16)
+      ..write(obj.inventoryQuantity);
   }
 
   @override

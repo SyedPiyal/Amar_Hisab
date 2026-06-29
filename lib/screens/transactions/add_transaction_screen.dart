@@ -6,6 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import '../../theme/app_colors.dart';
 import '../../models/transaction.dart';
 import '../../models/account.dart';
+import '../../models/inventory_item.dart';
+import '../../providers/inventory_provider.dart';
 import 'provider/transaction_provider.dart';
 import '../accounts/provider/account_provider.dart';
 import '../settings/provider/settings_provider.dart';
@@ -15,7 +17,16 @@ import '../../widgets/ai_voice_dialog.dart';
 class AddTransactionScreen extends StatefulWidget {
   final String? initialCategory;
   final String? initialAmount;
-  const AddTransactionScreen({super.key, this.initialCategory, this.initialAmount});
+  final InventoryItem? initialInventoryItem;
+  final String? initialType; // 'আয়' or 'ব্যয়'
+
+  const AddTransactionScreen({
+    super.key, 
+    this.initialCategory, 
+    this.initialAmount,
+    this.initialInventoryItem,
+    this.initialType,
+  });
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
@@ -27,11 +38,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _taxController = TextEditingController(text: '0');
+  final TextEditingController _quantityController = TextEditingController(text: '1');
   
   Account? _selectedAccount; // For Simple Mode
   Account? _fromAccount; // For Advanced Mode
   Account? _toAccount; // For Advanced Mode
   
+  InventoryItem? _selectedInventoryItem;
+
   bool _isSplit = false;
   final List<Map<String, dynamic>> _splitItems = [];
 
@@ -53,6 +67,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     if (widget.initialAmount != null) {
       _amountController.text = widget.initialAmount!;
       _amount = double.tryParse(widget.initialAmount!) ?? 0.0;
+    }
+    if (widget.initialType != null) {
+      _type = widget.initialType!;
+    }
+    if (widget.initialInventoryItem != null) {
+      _selectedInventoryItem = widget.initialInventoryItem;
+      _titleController.text = _selectedInventoryItem!.name;
+      _amount = _type == 'আয়' 
+          ? _selectedInventoryItem!.salePrice 
+          : _selectedInventoryItem!.purchasePrice;
+      _amountController.text = _amount.toString();
     }
   }
 
@@ -120,7 +145,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           _attachmentPaths.add(image.path);
 
           // Find match for category/type
-          final category = result['category'] ?? 'Groceries';
           _type = 'ব্যয়';
         });
         ScaffoldMessenger.of(context).showSnackBar(
@@ -169,6 +193,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     _amountController.dispose();
     _titleController.dispose();
     _taxController.dispose();
+    _quantityController.dispose();
     for (var item in _splitItems) {
       item['controller'].dispose();
     }
@@ -264,6 +289,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             _buildTypeSelector(),
             const SizedBox(height: 24),
 
+            // Inventory Selection (NEW)
+            _buildInventorySection(),
+            const SizedBox(height: 24),
+
             // Title/Category
             _buildFieldHeader('বিবরণ / ক্যাটাগরি'),
             TextField(
@@ -316,6 +345,71 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildInventorySection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFieldHeader('ইনভেন্টরি আইটেম (ঐচ্ছিক)'),
+        Consumer<InventoryProvider>(
+          builder: (context, provider, _) {
+            return DropdownButtonFormField<InventoryItem>(
+              decoration: const InputDecoration(
+                hintText: 'পণ্য সিলেক্ট করুন',
+                prefixIcon: Icon(Icons.inventory_2_outlined),
+              ),
+              value: _selectedInventoryItem,
+              items: [
+                const DropdownMenuItem<InventoryItem>(
+                  value: null,
+                  child: Text('কোন পণ্য নেই'),
+                ),
+                ...provider.items.map((item) {
+                  return DropdownMenuItem(
+                    value: item,
+                    child: Text('${item.name} (${item.stockQuantity} ${item.unit})'),
+                  );
+                }),
+              ],
+              onChanged: (val) {
+                setState(() {
+                  _selectedInventoryItem = val;
+                  if (val != null) {
+                    _titleController.text = val.name;
+                    _amount = (_type == 'আয়' ? val.salePrice : val.purchasePrice) * (double.tryParse(_quantityController.text) ?? 1.0);
+                    _amountController.text = _amount.toStringAsFixed(2);
+                  }
+                });
+              },
+            );
+          },
+        ),
+        if (_selectedInventoryItem != null) ...[
+          const SizedBox(height: 16),
+          _buildFieldHeader('পরিমাণ (${_selectedInventoryItem!.unit})'),
+          TextField(
+            controller: _quantityController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              hintText: 'পরিমাণ লিখুন',
+              prefixIcon: Icon(Icons.exposure_zero_rounded),
+            ),
+            onChanged: (val) {
+              final qty = double.tryParse(val) ?? 1.0;
+              setState(() {
+                if (_selectedInventoryItem != null) {
+                  _amount = (_type == 'আয়' 
+                      ? _selectedInventoryItem!.salePrice 
+                      : _selectedInventoryItem!.purchasePrice) * qty;
+                  _amountController.text = _amount.toStringAsFixed(2);
+                }
+              });
+            },
+          ),
+        ],
+      ],
     );
   }
 
@@ -611,6 +705,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   void _submitTransaction(bool isAdvanced) async {
     final title = _titleController.text.trim();
+    final quantity = double.tryParse(_quantityController.text) ?? 1.0;
     
     bool isValid = false;
     if (isAdvanced) {
@@ -624,7 +719,21 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
     if (isValid) {
       final txProvider = Provider.of<TransactionProvider>(context, listen: false);
+      final inventoryProvider = Provider.of<InventoryProvider>(context, listen: false);
       final mappedType = _type == 'আয়' ? 'Income' : (_type == 'ব্যয়' ? 'Expense' : 'Transfer');
+
+      // Stock Validation
+      if (mappedType == 'Income' && _selectedInventoryItem != null) {
+        if (_selectedInventoryItem!.stockQuantity < quantity) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('পর্যাপ্ত স্টক নেই! বর্তমান স্টক: ${_selectedInventoryItem!.stockQuantity} ${_selectedInventoryItem!.unit}'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+          return;
+        }
+      }
 
       // Anomaly Detection
       if (txProvider.checkAnomaly(_amount, title, mappedType)) {
@@ -668,12 +777,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         attachmentPaths: _attachmentPaths.isNotEmpty ? _attachmentPaths : null,
         taxPercentage: _taxPercentage > 0 ? _taxPercentage : null,
         taxAmount: _taxAmount > 0 ? _taxAmount : null,
+        inventoryItemId: _selectedInventoryItem?.id,
+        inventoryQuantity: _selectedInventoryItem != null ? quantity : null,
       );
 
       await txProvider.addTransaction(
         tx,
         isAdvanced ? _toAccount! : _selectedAccount!,
         creditAccount: isAdvanced ? _fromAccount : null,
+        inventoryProvider: inventoryProvider,
       );
       
       if (mounted) Navigator.of(context).pop();
@@ -700,7 +812,19 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   Widget _buildTypeButton(String label, bool isSelected) {
     return GestureDetector(
-      onTap: () => setState(() => _type = label),
+      onTap: () {
+        setState(() {
+          _type = label;
+          // Re-calculate amount if inventory is selected
+          if (_selectedInventoryItem != null) {
+            final qty = double.tryParse(_quantityController.text) ?? 1.0;
+            _amount = (_type == 'আয়' 
+                ? _selectedInventoryItem!.salePrice 
+                : _selectedInventoryItem!.purchasePrice) * qty;
+            _amountController.text = _amount.toStringAsFixed(2);
+          }
+        });
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(

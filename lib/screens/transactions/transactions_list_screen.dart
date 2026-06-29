@@ -7,6 +7,8 @@ import '../../theme/app_colors.dart';
 import 'provider/transaction_provider.dart';
 import '../../models/transaction.dart' as app_models;
 import 'add_transaction_screen.dart';
+import '../accounts/provider/account_provider.dart';
+import '../../providers/inventory_provider.dart';
 
 class TransactionsListScreen extends StatefulWidget {
   const TransactionsListScreen({super.key});
@@ -291,43 +293,92 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.border, width: 0.5),
+      child: Dismissible(
+        key: Key(tx.id),
+        direction: DismissDirection.endToStart,
+        confirmDismiss: (direction) async {
+          return await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('মুছে ফেলুন', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
+              content: Text('আপনি কি নিশ্চিত যে এই লেনদেনটি মুছে ফেলতে চান? এর ফলে অ্যাকাউন্ট ব্যালেন্স এবং ইনভেন্টরি স্টক (যদি থাকে) পরিবর্তিত হবে।', style: GoogleFonts.hindSiliguri()),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('না')),
+                TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('হ্যাঁ', style: TextStyle(color: Colors.red))),
+              ],
+            ),
+          );
+        },
+        onDismissed: (direction) async {
+          final txProvider = Provider.of<TransactionProvider>(context, listen: false);
+          final accountProvider = Provider.of<AccountProvider>(context, listen: false);
+          final inventoryProvider = Provider.of<InventoryProvider>(context, listen: false);
+
+          final account = accountProvider.accounts.firstWhere((a) => a.id == tx.accountId);
+          final creditAccount = tx.creditAccountId != null 
+              ? accountProvider.accounts.firstWhere((a) => a.id == tx.creditAccountId) 
+              : null;
+
+          await txProvider.deleteTransaction(
+            tx,
+            account: account,
+            creditAccount: creditAccount,
+            inventoryProvider: inventoryProvider,
+          );
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('লেনদেনটি মুছে ফেলা হয়েছে এবং ব্যালেন্স সমন্বয় করা হয়েছে।')),
+            );
+          }
+        },
+        background: Container(
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 20),
+          decoration: BoxDecoration(
+            color: Colors.red,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Icon(Icons.delete, color: Colors.white),
         ),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          leading: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              iconData,
-              color: iconColor,
-              size: 20,
-            ),
+        child: Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: AppColors.border, width: 0.5),
           ),
-          title: Text(
-            tx.title,
-            style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold),
-          ),
-          subtitle: Text(
-            dateFormat.format(tx.date),
-            style: GoogleFonts.hindSiliguri(
-              fontSize: 11,
-              color: AppColors.textSecondary,
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                iconData,
+                color: iconColor,
+                size: 20,
+              ),
             ),
-          ),
-          trailing: Text(
-            '${isIncome ? '+' : (isTransfer ? '' : '-')} ${balanceFormat.format(tx.amount)}',
-            style: TextStyle(
-              color: isIncome ? AppColors.success : (isTransfer ? AppColors.primary : AppColors.error),
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
+            title: Text(
+              tx.title,
+              style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text(
+              dateFormat.format(tx.date),
+              style: GoogleFonts.hindSiliguri(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            trailing: Text(
+              '${isIncome ? '+' : (isTransfer ? '' : '-')} ${balanceFormat.format(tx.amount)}',
+              style: TextStyle(
+                color: isIncome ? AppColors.success : (isTransfer ? AppColors.primary : AppColors.error),
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
             ),
           ),
         ),

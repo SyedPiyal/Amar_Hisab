@@ -13,9 +13,9 @@ import '../help/help_screen.dart';
 import '../auth/login_screen.dart';
 import '../debts/debts_screen.dart';
 import 'category_management_screen.dart';
-import '../profile/subscription_plan_screen.dart';
 import '../help/user_manual_screen.dart';
 import '../auth/provider/auth_provider.dart';
+import '../inventory/inventory_list_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
@@ -68,6 +68,15 @@ class MoreScreen extends StatelessWidget {
             ),
           ]),
           const SizedBox(height: 24),
+          _buildMenuSection('ব্যবসা সরঞ্জাম', [
+            _buildMenuItem(
+              context,
+              'ইনভেন্টরি বা স্টক',
+              Icons.inventory_2_outlined,
+              const InventoryListScreen(),
+            ),
+          ]),
+          const SizedBox(height: 24),
           _buildMenuSection('অ্যাকাউন্ট ও প্রোফাইল', [
             _buildMenuItem(
               context,
@@ -75,12 +84,6 @@ class MoreScreen extends StatelessWidget {
               Icons.person_outline_rounded,
               const ProfileScreen(),
             ),
-            // _buildMenuItem(
-            //   context,
-            //   'সাবস্ক্রিপশন প্ল্যান',
-            //   Icons.card_membership_rounded,
-            //   const SubscriptionPlanScreen(),
-            // ),
           ]),
           const SizedBox(height: 24),
           _buildMenuSection('সেটিংস ও অন্যান্য', [

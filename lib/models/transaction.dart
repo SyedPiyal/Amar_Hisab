@@ -49,6 +49,12 @@ class Transaction extends HiveObject {
   @HiveField(14)
   final double? taxAmount;
 
+  @HiveField(15)
+  final String? inventoryItemId;
+
+  @HiveField(16)
+  final double? inventoryQuantity;
+
   Transaction({
     required this.id,
     required this.title,
@@ -65,5 +71,7 @@ class Transaction extends HiveObject {
     this.attachmentPaths,
     this.taxPercentage,
     this.taxAmount,
+    this.inventoryItemId,
+    this.inventoryQuantity,
   });
 }

@@ -18,6 +18,7 @@ import '../transactions/provider/transaction_provider.dart';
 import '../transactions/provider/scheduled_transaction_provider.dart';
 import '../../services/ai_service.dart';
 import '../ai_chat/chat_screen.dart';
+import '../inventory/inventory_list_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -568,6 +569,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildQuickActions(BuildContext context) {
     final actions = [
+      {'label': 'ইনভেন্টরি', 'icon': Icons.inventory_2_outlined, 'color': Colors.teal},
       {'label': 'বাজার', 'icon': Icons.shopping_cart_outlined, 'color': Colors.orange},
       {'label': 'খাবার', 'icon': Icons.restaurant_rounded, 'color': Colors.redAccent},
       {'label': 'যাতায়াত', 'icon': Icons.directions_bus_rounded, 'color': Colors.blue},
@@ -596,14 +598,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: InkWell(
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AddTransactionScreen(
-                          initialCategory: action['label'] as String,
+                    if (action['label'] == 'ইনভেন্টরি') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const InventoryListScreen(),
                         ),
-                      ),
-                    );
+                      );
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AddTransactionScreen(
+                            initialCategory: action['label'] as String,
+                          ),
+                        ),
+                      );
+                    }
                   },
                   borderRadius: BorderRadius.circular(16),
                   child: Container(

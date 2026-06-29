@@ -4,20 +4,32 @@ This report analyzes the current state of **Amar Hisab** following our initial u
 
 ---
 
+## ✅ Completed Advanced Features (Phase 2)
+
+### 1. Inventory & Stock Management (মজুদ ব্যবস্থাপনা) - [IMPLEMENTED]
+*   **Status:** Active
+*   **Features:** Product database, stock quantity tracking, low-stock alerts, and unit management (Piece, KG, etc.).
+*   **Integration:** Linked to Dashboard Quick Actions and the "More" menu for full management.
+*   **Advanced Logic:** 
+    *   Automatic stock deduction on sales (Income transactions).
+    *   Automatic stock addition on purchases (Expense transactions).
+    *   Stock validation (Prevents sales if stock is insufficient).
+    *   Automatic stock reversal when transactions are deleted.
+
+---
+
 ## 1. Are All Necessary Accounting Features Present?
 
-While the app now covers the basics (Chart of Accounts, Debts, Transactions, and Receipts), an *advanced* accounting software requires several more complex modules that are currently **missing**:
+While the app now covers the basics and recently added Inventory, an *advanced* accounting software requires several more complex modules that are currently **missing**:
 
 ### Missing Advanced Features:
-1.  **Inventory & Stock Management (মজুদ ব্যবস্থাপনা):**
-    *   *Why:* Retailers need to track product quantities, Cost of Goods Sold (COGS), and get low-stock alerts. Right now, Amar Hisab only tracks money, not items.
-2.  **Multi-User & Role Management (মাল্টি-ইউজার):**
+1.  **Multi-User & Role Management (মাল্টি-ইউজার):**
     *   *Why:* A business owner might want their cashier to only add sales, while the owner sees the full profit/loss. The app currently assumes a single user.
-3.  **Real-Time Cloud Synchronization (রিয়েল-টাইম ক্লাউড সিঙ্ক):**
+2.  **Real-Time Cloud Synchronization (রিয়েল-টাইম ক্লাউড সিঙ্ক):**
     *   *Why:* Hive is local. If the phone breaks, data is lost unless manually backed up. An advanced app needs automatic background syncing to a database (like Firebase).
-4.  **Multi-Business Management (একাধিক ব্যবসা পরিচালনা):**
+3.  **Multi-Business Management (একাধিক ব্যবসা পরিচালনা):**
     *   *Why:* Many entrepreneurs own multiple small businesses. They need to switch profiles without logging out.
-5.  **Payroll Management (বেতন ব্যবস্থাপনা):**
+4.  **Payroll Management (বেতন ব্যবস্থাপনা):**
     *   *Why:* Managing employee salaries, daily allowances, and loan advances is critical for SMEs.
 
 ---
@@ -27,7 +39,7 @@ While the app now covers the basics (Chart of Accounts, Debts, Transactions, and
 Talikhata dominates the micro-merchant sector because it is incredibly simple. To beat Talikhata, **Amar Hisab must target SMEs (Small & Medium Enterprises) who are outgrowing Talikhata's basic features.**
 
 ### How to beat Talikhata:
-*   **Offer What They Don't (Inventory):** Talikhata is notoriously weak on deep inventory management. Adding a seamless barcode scanner and stock tracker will win over larger retail shops.
+*   **Offer What They Don't (Inventory):** [COMPLETED] We have implemented a robust inventory system which is a major pain point for Talikhata users.
 *   **Desktop/Web Parity:** Business owners often prefer a laptop for end-of-month reporting. Compiling Amar Hisab for Web/Windows (using Flutter's cross-platform capabilities) gives you a massive advantage over Talikhata's mobile-only approach.
 *   **Superior AI:** Talikhata does not have generative AI. Your app’s ability to understand voice and scan receipts is a massive leap forward.
 
@@ -48,16 +60,12 @@ Talikhata dominates the micro-merchant sector because it is incredibly simple. T
 
 ---
 
-## 4. Implementation Roadmap (What, Where, & How)
+## 4. Implementation Roadmap (Status Update)
 
-Here is exactly how you should implement these advanced features in the project:
-
-### Phase 2.1: Inventory Management
-*   **Where:** Create a new folder `lib/screens/inventory/`.
-*   **What:** `Item` model (name, barcode, buy price, sell price, stock count).
-*   **How:** 
-    *   Use `mobile_scanner` package for barcode reading.
-    *   When adding a sales transaction, the user selects items, which automatically deducts from stock and calculates profit dynamically.
+### Phase 2.1: Inventory Management [DONE]
+*   **Location:** `lib/screens/inventory/` and `lib/models/inventory_item.dart`.
+*   **Status:** Fully integrated with Transactions. 
+*   **Logic:** Automatic stock adjustment, validation for low stock during sales, and automatic reversal on deletion.
 
 ### Phase 2.2: Cloud Sync (Firebase Integration)
 *   **Where:** `lib/services/cloud_sync_service.dart`.
@@ -67,7 +75,7 @@ Here is exactly how you should implement these advanced features in the project:
     *   Implement a sync engine that listens to Hive box changes (`box.watch()`) and pushes changes to Firestore. 
     *   Add OTP Phone Login using `firebase_auth` (essential for competing with Talikhata).
 
-### Phase 2.3: Conversational AI Chatbot
+### Phase 2.3: Conversational AI Chatbot [DONE]
 *   **Where:** `lib/screens/ai_chat/chat_screen.dart`.
 *   **What:** A ChatGPT-like interface for querying the ledger.
 *   **How:**
@@ -86,4 +94,4 @@ Here is exactly how you should implement these advanced features in the project:
 
 > [!TIP]
 > **Recommendation on Next Steps:** 
-> If you want to begin Phase 2 immediately, I recommend starting with **Cloud Sync & OTP Login** first. This is the biggest hurdle users face (fear of losing data). Once data is secured in the cloud, building Inventory and the Conversational AI becomes much easier.
+> Now that Inventory is fully integrated and robust, the biggest hurdle remaining is **Cloud Sync & OTP Login**. This is essential for data security and competing with market leaders. After that, we can focus on the Conversational AI Chatbot.
