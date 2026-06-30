@@ -138,28 +138,12 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                     ],
                   ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      const Icon(
-                        Icons.account_balance_wallet_rounded,
-                        size: 50,
-                        color: AppColors.primary,
-                      ),
-                      Positioned(
-                        right: 20,
-                        top: 20,
-                        child: Container(
-                          width: 12,
-                          height: 12,
-                          decoration: BoxDecoration(
-                            color: AppColors.secondary,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Image.asset(
+                      'assets/images/appLogo.png',
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
