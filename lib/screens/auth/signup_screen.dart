@@ -79,7 +79,7 @@ class _SignupScreenState extends State<SignupScreen> {
               TextField(
                 controller: _nameController,
                 decoration: const InputDecoration(
-                  hintText: 'John Doe',
+                  hintText: 'উদা: রহিম উদ্দিন',
                   prefixIcon: Icon(Icons.person_outline),
                 ),
               ),

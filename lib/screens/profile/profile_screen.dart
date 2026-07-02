@@ -74,7 +74,7 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Subscription Card
-            _buildSubscriptionCard(context),
+            // _buildSubscriptionCard(context),
             const SizedBox(height: 32),
 
             // Profile Actions
