@@ -16,6 +16,7 @@ import 'category_management_screen.dart';
 import '../help/user_manual_screen.dart';
 import '../auth/provider/auth_provider.dart';
 import '../inventory/inventory_list_screen.dart';
+import '../other/billing/billing_dashboard_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
@@ -74,6 +75,12 @@ class MoreScreen extends StatelessWidget {
               'ইনভেন্টরি বা স্টক',
               Icons.inventory_2_outlined,
               const InventoryListScreen(),
+            ),
+            _buildMenuItem(
+              context,
+              'বিলিং ও পিওএস (Billing)',
+              Icons.qr_code_scanner_rounded,
+              const BillingDashboardScreen(),
             ),
           ]),
           const SizedBox(height: 24),

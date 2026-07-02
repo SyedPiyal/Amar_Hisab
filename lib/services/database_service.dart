@@ -8,7 +8,8 @@ import '../models/budget.dart';
 import '../models/scheduled_transaction.dart';
 import '../models/savings_goal.dart';
 import '../models/inventory_item.dart';
-
+import '../models/billing/product.dart';
+import '../models/billing/shop.dart';
 class DatabaseService {
   static Future<void> init() async {
     await Hive.initFlutter();
@@ -23,5 +24,12 @@ class DatabaseService {
     Hive.registerAdapter(ScheduledTransactionAdapter());
     Hive.registerAdapter(SavingsGoalAdapter());
     Hive.registerAdapter(InventoryItemAdapter());
+    Hive.registerAdapter(ProductAdapter());
+    Hive.registerAdapter(ShopAdapter());
+
+    await Hive.openBox<Product>('products');
+    await Hive.openBox<Shop>('shop');
+    await Hive.openBox('settings');
   }
 }
+

@@ -10,7 +10,10 @@ import 'screens/reports/provider/budget_provider.dart';
 import 'screens/transactions/provider/scheduled_transaction_provider.dart';
 import 'screens/reports/provider/savings_goal_provider.dart';
 import 'providers/inventory_provider.dart';
-
+import 'providers/billing/product_provider.dart';
+import 'providers/billing/shop_provider.dart';
+import 'providers/billing/billing_provider.dart';
+import 'providers/billing/printer_provider.dart';
 class AppProviders extends StatelessWidget {
   final Widget child;
 
@@ -29,6 +32,10 @@ class AppProviders extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ScheduledTransactionProvider()),
         ChangeNotifierProvider(create: (_) => SavingsGoalProvider()),
         ChangeNotifierProvider(create: (_) => InventoryProvider()..loadItems()),
+        ChangeNotifierProvider(create: (_) => ProductProvider()),
+        ChangeNotifierProvider(create: (_) => ShopProvider()),
+        ChangeNotifierProvider(create: (_) => BillingProvider()),
+        ChangeNotifierProvider(create: (_) => PrinterProvider()),
       ],
       child: child,
     );
