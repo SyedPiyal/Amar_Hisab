@@ -15,7 +15,7 @@ class BillingDashboardScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          'Advanced Billing & POS',
+          'অ্যাডভান্সড বিলিং এবং পিওএস',
           style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.transparent,
@@ -24,25 +24,25 @@ class BillingDashboardScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildMenuSection('POS System', [
+          _buildMenuSection('পিওএস সিস্টেম', [
             _buildMenuItem(
               context,
-              'New Sale / Checkout',
+              'নতুন বিক্রি / চেকআউট',
               Icons.point_of_sale_rounded,
               const BillingPage(),
             ),
           ]),
           const SizedBox(height: 24),
-          _buildMenuSection('Management', [
+          _buildMenuSection('ব্যবস্থাপনা', [
             _buildMenuItem(
               context,
-              'Products Management',
+              'পণ্য ব্যবস্থাপনা',
               Icons.inventory_2_outlined,
               const ProductListPage(),
             ),
             _buildMenuItem(
               context,
-              'Shop Details',
+              'দোকানের তথ্য',
               Icons.store_outlined,
               const ShopDetailsPage(),
             ),

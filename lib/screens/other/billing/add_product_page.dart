@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../../providers/billing/product_provider.dart';
 import '../../../models/billing/product.dart';
 
 class AddProductPage extends StatefulWidget {
-  const AddProductPage({super.key});
+  final String? initialBarcode;
+  const AddProductPage({super.key, this.initialBarcode});
 
   @override
   State<AddProductPage> createState() => _AddProductPageState();
@@ -14,11 +16,13 @@ class AddProductPage extends StatefulWidget {
 class _AddProductPageState extends State<AddProductPage> {
   final _formKey = GlobalKey<FormState>();
   String _name = '';
-  String _barcode = '';
+  late String _barcode;
   double _price = 0.0;
 
-  void _scanBarcode() async {
-    // Basic mock for scanner logic
+  @override
+  void initState() {
+    super.initState();
+    _barcode = widget.initialBarcode ?? '';
   }
 
   void _submit() {
@@ -31,7 +35,7 @@ class _AddProductPageState extends State<AddProductPage> {
       if (existingProduct != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Product with barcode "$_barcode" already exists!'),
+            content: Text('বারকোড "$_barcode" সহ পণ্য ইতিমধ্যে বিদ্যমান!', style: GoogleFonts.hindSiliguri()),
             backgroundColor: Colors.red,
           ),
         );
@@ -55,7 +59,7 @@ class _AddProductPageState extends State<AddProductPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text('Add Product'),
+          title: Text('পণ্য যোগ করুন', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
         ),
         body: SafeArea(
           child: SingleChildScrollView(
@@ -65,7 +69,7 @@ class _AddProductPageState extends State<AddProductPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Barcode', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('বারকোড', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -73,41 +77,45 @@ class _AddProductPageState extends State<AddProductPage> {
                         child: TextFormField(
                           key: ValueKey(_barcode),
                           initialValue: _barcode,
-                          decoration: const InputDecoration(
-                            hintText: 'Scan or enter barcode',
-                            border: OutlineInputBorder(),
+                          style: GoogleFonts.hindSiliguri(),
+                          decoration: InputDecoration(
+                            hintText: 'স্ক্যান করুন বা বারকোড দিন',
+                            hintStyle: GoogleFonts.hindSiliguri(),
+                            border: const OutlineInputBorder(),
                           ),
-                          validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                          validator: (val) => val == null || val.isEmpty ? 'প্রয়োজনীয়' : null,
                           onSaved: (value) => _barcode = value!,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
-                  const Text('Product Name', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('পণ্যের নাম', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   TextFormField(
-                    decoration: const InputDecoration(
-                      hintText: 'e.g. Basmati Rice',
-                      border: OutlineInputBorder(),
+                    style: GoogleFonts.hindSiliguri(),
+                    decoration: InputDecoration(
+                      hintText: 'যেমন: বাসমতি চাল',
+                      hintStyle: GoogleFonts.hindSiliguri(),
+                      border: const OutlineInputBorder(),
                     ),
                     textCapitalization: TextCapitalization.words,
-                    validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                    validator: (val) => val == null || val.isEmpty ? 'প্রয়োজনীয়' : null,
                     onSaved: (value) => _name = value!,
                   ),
                   const SizedBox(height: 24),
-                  const Text('Price', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('মূল্য', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   TextFormField(
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(
-                      hintText: '0.00',
-                      prefixText: '₹ ',
+                      hintText: '০.০০',
+                      prefixText: '৳ ',
                       border: OutlineInputBorder(),
                     ),
                     validator: (val) {
-                       if(val == null || val.isEmpty) return 'Required';
-                       if(double.tryParse(val) == null) return 'Invalid price';
+                       if(val == null || val.isEmpty) return 'প্রয়োজনীয়';
+                       if(double.tryParse(val) == null) return 'সঠিক মূল্য দিন';
                        return null;
                     },
                     onSaved: (value) => _price = double.parse(value!),
@@ -118,7 +126,7 @@ class _AddProductPageState extends State<AddProductPage> {
                     child: ElevatedButton.icon(
                       onPressed: _submit,
                       icon: const Icon(Icons.add_circle),
-                      label: const Text('Add Product'),
+                      label: Text('পণ্য যোগ করুন', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),

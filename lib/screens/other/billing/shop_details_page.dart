@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/billing/shop_provider.dart';
 import '../../../models/billing/shop.dart';
@@ -71,8 +72,8 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
       );
 
       context.read<ShopProvider>().updateShop(shop).then((_) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Shop details saved!'),
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('দোকানের তথ্য সংরক্ষিত হয়েছে!', style: GoogleFonts.hindSiliguri()),
             backgroundColor: Colors.green));
         Navigator.pop(context);
       });
@@ -83,7 +84,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Shop Details'),
+        title: Text('দোকানের তথ্য', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
       ),
       body: Consumer<ShopProvider>(
         builder: (context, provider, child) {
@@ -102,70 +103,70 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('General Information',
-                      style: TextStyle(
-                        fontSize: 12,
+                  Text('সাধারণ তথ্য',
+                      style: GoogleFonts.hindSiliguri(
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.2,
                         color: Theme.of(context).primaryColor.withOpacity(0.8),
                       )),
                   const SizedBox(height: 5),
                   Text(
-                    'These details will appear on your digital and printed receipts.',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                    'এই তথ্যগুলি আপনার ডিজিটাল এবং প্রিন্ট করা রসিদে প্রদর্শিত হবে।',
+                    style: GoogleFonts.hindSiliguri(fontSize: 12, color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 24),
-                  const Text('Shop Name', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('দোকানের নাম', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   _buildTextField(
                     controller: _nameController,
-                    hint: 'e.g. QuickMart Superstore',
-                    validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                    hint: 'যেমন: কুইকমার্ট সুপারস্টোর',
+                    validator: (val) => val == null || val.isEmpty ? 'প্রয়োজনীয়' : null,
                   ),
                   const SizedBox(height: 15),
-                  const Text('Address Line 1', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('ঠিকানার লাইন ১', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   _buildTextField(
                     controller: _address1Controller,
-                    hint: 'Samrajpet, Mecheri',
-                    validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                    hint: 'রাস্তা, এলাকা',
+                    validator: (val) => val == null || val.isEmpty ? 'প্রয়োজনীয়' : null,
                   ),
                   const SizedBox(height: 15),
-                  const Text('Address Line 2 (Optional)', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('ঠিকানার লাইন ২ (ঐচ্ছিক)', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   _buildTextField(
                     controller: _address2Controller,
-                    hint: 'Salem - 636453',
+                    hint: 'শহর, পোস্টাল কোড',
                   ),
                   const SizedBox(height: 15),
-                  const Text('Phone Number', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('ফোন নম্বর', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   _buildTextField(
                     controller: _phoneController,
-                    hint: '+91 7010674588',
+                    hint: '+৮৮০১৭XXXXXXXX',
                     keyboardType: TextInputType.phone,
-                    validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                    validator: (val) => val == null || val.isEmpty ? 'প্রয়োজনীয়' : null,
                   ),
                   const SizedBox(height: 15),
-                  const Text('UPI ID', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('ইউপিআই আইডি (UPI ID)', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   _buildTextField(
                     controller: _upiController,
-                    hint: 'dineshsowndar@oksbi',
+                    hint: 'example@upi',
                   ),
                   const SizedBox(height: 15),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Receipt Footer Text', style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text('Max 150 chars',
-                          style: TextStyle(fontSize: 11, color: Colors.grey[400])),
+                      Text('রসিদের ফুটার টেক্সট', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
+                      Text('সর্বোচ্চ ৬০ অক্ষর',
+                          style: GoogleFonts.hindSiliguri(fontSize: 11, color: Colors.grey[400])),
                     ],
                   ),
                   const SizedBox(height: 8),
                   _buildTextField(
                     controller: _footerController,
-                    hint: 'Thank you, Visit again!!!',
+                    hint: 'ধন্যবাদ, আবার আসবেন!!!',
                     maxLines: 2,
                     maxLength: 60,
                   ),
@@ -173,7 +174,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                   ElevatedButton.icon(
                     onPressed: _saveShop,
                     icon: const Icon(Icons.save),
-                    label: const Text('Save Details'),
+                    label: Text('তথ্য সংরক্ষণ করুন', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
@@ -202,8 +203,10 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
       maxLength: maxLength,
       textCapitalization: TextCapitalization.words,
       validator: validator,
+      style: GoogleFonts.hindSiliguri(),
       decoration: InputDecoration(
         hintText: hint,
+        hintStyle: GoogleFonts.hindSiliguri(color: Colors.grey[400]),
         border: const OutlineInputBorder(),
       ),
     );

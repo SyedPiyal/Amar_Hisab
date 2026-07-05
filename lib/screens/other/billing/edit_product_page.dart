@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/billing/product_provider.dart';
 import '../../../models/billing/product.dart';
@@ -36,7 +37,7 @@ class _EditProductPageState extends State<EditProductPage> {
       if (existingProduct != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Product with barcode "$_barcode" already exists!'),
+            content: Text('বারকোড "$_barcode" সহ পণ্য ইতিমধ্যে বিদ্যমান!', style: GoogleFonts.hindSiliguri()),
             backgroundColor: Colors.red,
           ),
         );
@@ -60,7 +61,7 @@ class _EditProductPageState extends State<EditProductPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text('Edit Product'),
+          title: Text('পণ্য সংশোধন করুন', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
         ),
         body: SafeArea(
           child: SingleChildScrollView(
@@ -70,44 +71,48 @@ class _EditProductPageState extends State<EditProductPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Barcode', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('বারকোড', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   TextFormField(
                     initialValue: _barcode,
-                    decoration: const InputDecoration(
-                      hintText: 'Enter barcode',
-                      border: OutlineInputBorder(),
+                    style: GoogleFonts.hindSiliguri(),
+                    decoration: InputDecoration(
+                      hintText: 'বারকোড দিন',
+                      hintStyle: GoogleFonts.hindSiliguri(),
+                      border: const OutlineInputBorder(),
                     ),
-                    validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                    validator: (val) => val == null || val.isEmpty ? 'প্রয়োজনীয়' : null,
                     onSaved: (value) => _barcode = value!,
                   ),
                   const SizedBox(height: 24),
-                  const Text('Product Name', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('পণ্যের নাম', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   TextFormField(
                     initialValue: _name,
-                    decoration: const InputDecoration(
-                      hintText: 'e.g. Basmati Rice',
-                      border: OutlineInputBorder(),
+                    style: GoogleFonts.hindSiliguri(),
+                    decoration: InputDecoration(
+                      hintText: 'যেমন: বাসমতি চাল',
+                      hintStyle: GoogleFonts.hindSiliguri(),
+                      border: const OutlineInputBorder(),
                     ),
                     textCapitalization: TextCapitalization.words,
-                    validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                    validator: (val) => val == null || val.isEmpty ? 'প্রয়োজনীয়' : null,
                     onSaved: (value) => _name = value!,
                   ),
                   const SizedBox(height: 24),
-                  const Text('Price', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('মূল্য', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   TextFormField(
                     initialValue: _price.toString(),
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(
-                      hintText: '0.00',
-                      prefixText: '₹ ',
+                      hintText: '০.০০',
+                      prefixText: '৳ ',
                       border: OutlineInputBorder(),
                     ),
                     validator: (val) {
-                       if(val == null || val.isEmpty) return 'Required';
-                       if(double.tryParse(val) == null) return 'Invalid price';
+                       if(val == null || val.isEmpty) return 'প্রয়োজনীয়';
+                       if(double.tryParse(val) == null) return 'সঠিক মূল্য দিন';
                        return null;
                     },
                     onSaved: (value) => _price = double.parse(value!),
@@ -118,7 +123,7 @@ class _EditProductPageState extends State<EditProductPage> {
                     child: ElevatedButton.icon(
                       onPressed: _submit,
                       icon: const Icon(Icons.save),
-                      label: const Text('Save Changes'),
+                      label: Text('পরিবর্তন সংরক্ষণ করুন', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),

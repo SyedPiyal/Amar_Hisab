@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:vibration/vibration.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -7,6 +8,7 @@ import '../../../providers/billing/billing_provider.dart';
 import '../../../providers/billing/product_provider.dart';
 import '../../../models/billing/cart_item.dart';
 import 'checkout_page.dart';
+import 'add_product_page.dart';
 
 class BillingPage extends StatefulWidget {
   const BillingPage({super.key});
@@ -67,19 +69,26 @@ class _BillingPageState extends State<BillingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Billing")),
+      appBar: AppBar(title: Text("বিলিং", style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold))),
       body: Consumer<BillingProvider>(
         builder: (context, provider, child) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (provider.error != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(provider.error!),
-                  backgroundColor: Colors.red,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+              final errorMsg = provider.error!;
               provider.clearError();
+              
+              if (errorMsg.startsWith('Product not found:')) {
+                final barcode = errorMsg.split(':')[1].trim();
+                _showAddProductDialog(barcode);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(errorMsg, style: GoogleFonts.hindSiliguri()),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
             }
           });
 
@@ -120,7 +129,7 @@ class _BillingPageState extends State<BillingPage> {
                         if (_isCameraOn && mounted) _scannerController.start();
                       },
                 icon: const Icon(Icons.payment),
-                label: const Text('Review Order'),
+                label: Text('অর্ডার রিভিউ করুন', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
@@ -128,6 +137,31 @@ class _BillingPageState extends State<BillingPage> {
             ),
           );
         }
+      ),
+    );
+  }
+
+  void _showAddProductDialog(String barcode) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('পণ্য পাওয়া যায়নি', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
+        content: Text('এই বারকোডের ($barcode) কোন পণ্য পাওয়া যায়নি। আপনি কি নতুন পণ্য হিসেবে এটি যোগ করতে চান?', style: GoogleFonts.hindSiliguri()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('না', style: GoogleFonts.hindSiliguri(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(
+                builder: (context) => AddProductPage(initialBarcode: barcode)
+              ));
+            },
+            child: Text('হ্যাঁ, যোগ করুন', style: GoogleFonts.hindSiliguri()),
+          ),
+        ],
       ),
     );
   }
@@ -216,9 +250,9 @@ class _BillingPageState extends State<BillingPage> {
             child: const Icon(Icons.videocam_off, color: Colors.white, size: 32),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Camera is turned off',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+          Text(
+            'ক্যামেরা বন্ধ আছে',
+            style: GoogleFonts.hindSiliguri(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
@@ -227,7 +261,7 @@ class _BillingPageState extends State<BillingPage> {
               foregroundColor: Colors.white,
             ),
             icon: const Icon(Icons.videocam),
-            label: const Text('Turn on Camera'),
+            label: Text('ক্যামেরা চালু করুন', style: GoogleFonts.hindSiliguri()),
             onPressed: () {
               setState(() => _isCameraOn = true);
               _scannerController.start();
@@ -302,15 +336,15 @@ class _BillingPageState extends State<BillingPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Scanned Items', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                    Text('${provider.cartItems.fold<int>(0, (sum, i) => sum + i.quantity)} items total', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    Text('স্ক্যান করা আইটেম', style: GoogleFonts.hindSiliguri(fontSize: 18, fontWeight: FontWeight.w600)),
+                    Text('মোট ${provider.cartItems.fold<int>(0, (sum, i) => sum + i.quantity)} টি আইটেম', style: GoogleFonts.hindSiliguri(fontSize: 12, color: Colors.grey)),
                   ],
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Text('TOTAL PRICE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-                    Text('₹${provider.totalAmount.toStringAsFixed(2)}',
+                    Text('মোট টাকা', style: GoogleFonts.hindSiliguri(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+                    Text('৳${provider.totalAmount.toStringAsFixed(2)}',
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Theme.of(context).primaryColor),
                     ),
                   ],
@@ -344,7 +378,7 @@ class _BillingPageState extends State<BillingPage> {
         children: [
           Icon(Icons.shopping_basket, size: 40, color: Colors.grey[300]),
           const SizedBox(height: 16),
-          const Text('List is empty', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          Text('তালিকা খালি', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold, fontSize: 18)),
         ],
       ),
     );
@@ -365,8 +399,8 @@ class _BillingPageState extends State<BillingPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.product.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                Text('₹${item.product.price.toStringAsFixed(2)}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.grey[600])),
+                Text(item.product.name, style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.w600, fontSize: 14)),
+                Text('৳${item.product.price.toStringAsFixed(2)}', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.grey[600])),
               ],
             ),
           ),

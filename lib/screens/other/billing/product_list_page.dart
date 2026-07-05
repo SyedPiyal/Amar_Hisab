@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/billing/product_provider.dart';
 import '../../../models/billing/product.dart';
@@ -36,19 +37,13 @@ class _ProductListPageState extends State<ProductListPage> {
     super.dispose();
   }
 
-  void _scanQR(List<Product> products) async {
-    // Basic mock for scanner logic, in real app push scanner page
-    // final barcode = await Navigator.push(context, MaterialPageRoute(builder: (context) => const ScannerPage()));
-    // For now we just focus on search
-  }
-
   @override
   Widget build(BuildContext context) {
     final borderColor = Colors.grey[300]!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Product Management'),
+        title: Text('পণ্য ব্যবস্থাপনা', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
       ),
       body: Column(
         children: [
@@ -63,8 +58,10 @@ class _ProductListPageState extends State<ProductListPage> {
                       child: TextFormField(
                         controller: _searchController,
                         textCapitalization: TextCapitalization.words,
+                        style: GoogleFonts.hindSiliguri(),
                         decoration: InputDecoration(
-                          hintText: 'Search or enter barcode',
+                          hintText: 'খুঁজুন বা বারকোড দিন',
+                          hintStyle: GoogleFonts.hindSiliguri(),
                           prefixIcon: Icon(
                             Icons.search,
                             color: Colors.grey[400],
@@ -87,9 +84,9 @@ class _ProductListPageState extends State<ProductListPage> {
 
                 if (provider.products.isEmpty) {
                   if (provider.error != null) {
-                    return Center(child: Text('Error: ${provider.error}'));
+                    return Center(child: Text('ত্রুটি: ${provider.error}', style: GoogleFonts.hindSiliguri()));
                   }
-                  return const Center(child: Text('No products found. Add some!'));
+                  return Center(child: Text('কোনো পণ্য পাওয়া যায়নি। যোগ করুন!', style: GoogleFonts.hindSiliguri()));
                 }
 
                 final filteredProducts = provider.products
@@ -99,7 +96,7 @@ class _ProductListPageState extends State<ProductListPage> {
                     .toList();
 
                 if (filteredProducts.isEmpty) {
-                  return const Center(child: Text('No products match your search.'));
+                  return Center(child: Text('আপনার অনুসন্ধানের সাথে কোনো পণ্য মিলছে না।', style: GoogleFonts.hindSiliguri()));
                 }
 
                 return ListView.separated(
@@ -127,12 +124,12 @@ class _ProductListPageState extends State<ProductListPage> {
                               children: [
                                 Text(
                                   product.name,
-                                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                                  style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.w600, fontSize: 16),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '₹${product.price.toStringAsFixed(2)}',
-                                  style: TextStyle(fontWeight: FontWeight.w500, color: Colors.grey[600]),
+                                  '৳${product.price.toStringAsFixed(2)}',
+                                  style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.w500, color: Colors.grey[600]),
                                 ),
                               ],
                             ),
@@ -178,19 +175,19 @@ class _ProductListPageState extends State<ProductListPage> {
       context: context,
       builder: (innerContext) {
         return AlertDialog(
-          title: const Text('Delete Product'),
-          content: Text('Are you sure you want to delete ${product.name}?'),
+          title: Text('পণ্য মুছে ফেলুন', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
+          content: Text('আপনি কি নিশ্চিত যে আপনি ${product.name} মুছে ফেলতে চান?', style: GoogleFonts.hindSiliguri()),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(innerContext),
-              child: const Text('Cancel'),
+              child: Text('বাতিল', style: GoogleFonts.hindSiliguri()),
             ),
             TextButton(
               onPressed: () {
                 context.read<ProductProvider>().deleteProduct(product.id);
                 Navigator.pop(innerContext);
               },
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+              child: Text('মুছে ফেলুন', style: GoogleFonts.hindSiliguri(color: Colors.red)),
             ),
           ],
         );

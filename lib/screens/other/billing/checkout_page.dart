@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 
@@ -26,7 +27,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         },
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('Checkout', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            title: Text('চেকআউট', style: GoogleFonts.hindSiliguri(fontSize: 18, fontWeight: FontWeight.w600)),
             centerTitle: true,
             leading: IconButton(
               icon: Icon(Icons.chevron_left, size: 28, color: Theme.of(context).primaryColor),
@@ -40,8 +41,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
             builder: (context, billingState, child) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (billingState.printSuccess) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Printed successfully'),
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text('সফলভাবে প্রিন্ট করা হয়েছে', style: GoogleFonts.hindSiliguri()),
                       backgroundColor: Colors.green));
                 }
               });
@@ -78,17 +79,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                         border: Border(bottom: BorderSide(color: borderColor)),
                                       ),
                                       children: [
-                                        _buildHeaderCell('Product Name', TextAlign.left),
-                                        _buildHeaderCell('Price', TextAlign.right),
-                                        _buildHeaderCell('Total', TextAlign.right),
+                                        _buildHeaderCell('পণ্যের নাম', TextAlign.left),
+                                        _buildHeaderCell('মূল্য', TextAlign.right),
+                                        _buildHeaderCell('মোট', TextAlign.right),
                                       ],
                                     ),
                                     ...billingState.cartItems.map((item) {
                                       return TableRow(
                                         children: [
                                           _buildDataCell('${item.quantity} x ${item.product.name}', TextAlign.left),
-                                          _buildDataCell('₹${item.product.price.toStringAsFixed(2)}', TextAlign.right, isSubtitle: true),
-                                          _buildDataCell('₹${item.total.toStringAsFixed(2)}', TextAlign.right, isBold: true),
+                                          _buildDataCell('৳${item.product.price.toStringAsFixed(2)}', TextAlign.right, isSubtitle: true),
+                                          _buildDataCell('৳${item.total.toStringAsFixed(2)}', TextAlign.right, isBold: true),
                                         ],
                                       );
                                     }),
@@ -119,7 +120,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 upiId.isNotEmpty
                                     ? Column(
                                         children: [
-                                          const Text('Scan to Pay', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                          Text('পেমেন্ট করতে স্ক্যান করুন', style: GoogleFonts.hindSiliguri(fontSize: 16, fontWeight: FontWeight.bold)),
                                           const SizedBox(height: 12),
                                           SizedBox(
                                             width: 180,
@@ -135,8 +136,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text('GRAND TOTAL', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[400])),
-                                    Text('₹${billingState.totalAmount.toStringAsFixed(2)}',
+                                    Text('সর্বমোট', style: GoogleFonts.hindSiliguri(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[400])),
+                                    Text('৳${billingState.totalAmount.toStringAsFixed(2)}',
                                       style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
                                     ),
                                   ],
@@ -158,10 +159,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                         phone: shopState.shop!.phoneNumber,
                                         footer: shopState.shop!.footerText);
                                   } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Shop details not loaded'), backgroundColor: Colors.red));
+                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('দোকানের তথ্য লোড করা হয়নি', style: GoogleFonts.hindSiliguri()), backgroundColor: Colors.red));
                                   }
                                 },
-                                label: const Text('Print Receipt'),
+                                label: Text('রসিদ প্রিন্ট করুন', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
                                 icon: const Icon(Icons.print),
                                 style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
                               ),
@@ -181,14 +182,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
   Widget _buildHeaderCell(String text, TextAlign align) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      child: Text(text.toUpperCase(), textAlign: align, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+      child: Text(text, textAlign: align, style: GoogleFonts.hindSiliguri(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
     );
   }
 
   Widget _buildDataCell(String text, TextAlign align, {bool isBold = false, bool isSubtitle = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-      child: Text(text, textAlign: align, style: TextStyle(fontSize: isSubtitle ? 12 : 14, fontWeight: isBold ? FontWeight.bold : FontWeight.w500, color: isSubtitle ? Colors.grey[500] : Colors.black87)),
+      child: Text(text, textAlign: align, style: GoogleFonts.hindSiliguri(fontSize: isSubtitle ? 12 : 14, fontWeight: isBold ? FontWeight.bold : FontWeight.w500, color: isSubtitle ? Colors.grey[500] : Colors.black87)),
     );
   }
 }
