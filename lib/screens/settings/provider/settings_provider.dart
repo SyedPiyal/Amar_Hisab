@@ -1,18 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../models/app_settings.dart';
 
 class SettingsProvider with ChangeNotifier {
   late Box<AppSettings> _settingsBox;
   AppSettings? _settings;
+  bool _isFirstLaunch = true;
 
   AppSettings get settings => _settings ?? AppSettings();
+  bool get isFirstLaunch => _isFirstLaunch;
 
   SettingsProvider() {
     _init();
   }
 
   Future<void> _init() async {
+    // Initialize SharedPreferences for persistent flags
+    final prefs = await SharedPreferences.getInstance();
+    _isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
+
+    // Initialize Hive for other settings
     _settingsBox = await Hive.openBox<AppSettings>('settings');
     if (_settingsBox.isEmpty) {
       _settings = AppSettings();
@@ -40,7 +48,14 @@ class SettingsProvider with ChangeNotifier {
     if (currency != null) _settings!.currency = currency;
     if (language != null) _settings!.language = language;
     if (isAdvancedMode != null) _settings!.isAdvancedMode = isAdvancedMode;
-    if (isFirstLaunch != null) _settings!.isFirstLaunch = isFirstLaunch;
+    
+    if (isFirstLaunch != null) {
+      _isFirstLaunch = isFirstLaunch;
+      _settings!.isFirstLaunch = isFirstLaunch;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isFirstLaunch', isFirstLaunch);
+    }
+
     if (monthlySavingsGoal != null) _settings!.monthlySavingsGoal = monthlySavingsGoal;
     if (geminiApiKey != null) _settings!.geminiApiKey = geminiApiKey;
     if (isCloudBackupEnabled != null) _settings!.isCloudBackupEnabled = isCloudBackupEnabled;
@@ -52,7 +67,6 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  bool get isFirstLaunch => _settings?.isFirstLaunch ?? true;
   bool get isAdvancedMode => _settings?.isAdvancedMode ?? false;
   String get currency => _settings?.currency ?? 'BDT';
   String get language => _settings?.language ?? 'bn';

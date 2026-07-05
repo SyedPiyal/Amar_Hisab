@@ -15,6 +15,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
@@ -27,219 +28,234 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'ইমেইল অ্যাড্রেস প্রদান করুন';
+    }
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(value)) {
+      return 'সঠিক ইমেইল অ্যাড্রেস প্রদান করুন';
+    }
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'পাসওয়ার্ড প্রদান করুন';
+    }
+    if (value.length < 6) {
+      return 'পাসওয়ার্ড অন্তত ৬ অক্ষরের হতে হবে';
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 48),
-              // Header
-              Text(
-                'স্বাগতম!',
-                style: GoogleFonts.hindSiliguri(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              Text(
-                'Welcome Back',
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  color: AppColors.textSecondary,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              const SizedBox(height: 48),
-
-              // Email Field
-              Text(
-                'ইমেইল অ্যাড্রেস',
-                style: GoogleFonts.hindSiliguri(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  hintText: 'email@example.com',
-                  prefixIcon: Icon(Icons.email_outlined),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Password Field
-              Text(
-                'পাসওয়ার্ড',
-                style: GoogleFonts.hindSiliguri(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                decoration: InputDecoration(
-                  hintText: '••••••••',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      size: 20,
-                    ),
-                    onPressed: () {
-                      setState(() => _obscurePassword = !_obscurePassword);
-                    },
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 48),
+                // Header
+                Text(
+                  'স্বাগতম!',
+                  style: GoogleFonts.hindSiliguri(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
                   ),
                 ),
-              ),
+                Text(
+                  'Welcome Back',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    color: AppColors.textSecondary,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 48),
 
-              // Forgot Password
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {},
-                  child: Text(
-                    'পাসওয়ার্ড ভুলে গেছেন?',
-                    style: GoogleFonts.hindSiliguri(
-                      fontSize: 14,
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w500,
+                // Email Field
+                Text(
+                  'ইমেইল অ্যাড্রেস',
+                  style: GoogleFonts.hindSiliguri(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    hintText: 'email@example.com',
+                    prefixIcon: Icon(Icons.email_outlined),
+                  ),
+                  validator: _validateEmail,
+                ),
+                const SizedBox(height: 24),
+
+                // Password Field
+                Text(
+                  'পাসওয়ার্ড',
+                  style: GoogleFonts.hindSiliguri(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    hintText: '••••••••',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        setState(() => _obscurePassword = !_obscurePassword);
+                      },
+                    ),
+                  ),
+                  validator: _validatePassword,
+                ),
+
+                // Forgot Password
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {},
+                    child: Text(
+                      'পাসওয়ার্ড ভুলে গেছেন?',
+                      style: GoogleFonts.hindSiliguri(
+                        fontSize: 14,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 32),
+                const SizedBox(height: 32),
 
-              // Login Button
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _isLoading
-                      ? null
-                      : () async {
-                          if (_emailController.text.isEmpty ||
-                              _passwordController.text.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'অনুগ্রহ করে ইমেইল এবং পাসওয়ার্ড দিন',
-                                ),
-                              ),
-                            );
-                            return;
-                          }
+                // Login Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _isLoading
+                        ? null
+                        : () async {
+                            if (_formKey.currentState!.validate()) {
+                              setState(() => _isLoading = true);
 
-                          setState(() => _isLoading = true);
+                              try {
+                                final success = await Provider.of<AuthProvider>(
+                                  context,
+                                  listen: false,
+                                ).login(
+                                  _emailController.text.trim(),
+                                  _passwordController.text,
+                                );
 
-                          final success =
-                              await Provider.of<AuthProvider>(
-                                context,
-                                listen: false,
-                              ).login(
-                                _emailController.text,
-                                _passwordController.text,
-                              );
-
-                          if (mounted) {
-                            setState(() => _isLoading = false);
-                            if (success) {
-                              Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(
-                                  builder: (context) => const DashboardScreen(),
-                                ),
-                              );
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('ভুল ইমেইল অথবা পাসওয়ার্ড'),
-                                ),
-                              );
+                                if (mounted) {
+                                  setState(() => _isLoading = false);
+                                  if (success) {
+                                    Navigator.of(context).pushReplacement(
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const DashboardScreen(),
+                                      ),
+                                    );
+                                  }
+                                }
+                              } catch (e) {
+                                if (mounted) {
+                                  setState(() => _isLoading = false);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(e.toString()),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
                             }
-                          }
-                        },
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('লগইন করুন'),
+                          },
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text('লগইন করুন'),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              // Biometric Login Option
-              Center(
-                child: Column(
+                // Footer
+                Center(
+                  child: Column(
+                    children: [
+                      Text(
+                        'অথবা',
+                        style: GoogleFonts.hindSiliguri(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+
+                // Don't have an account?
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'অথবা',
+                      'অ্যাকাউন্ট নেই?',
                       style: GoogleFonts.hindSiliguri(
                         color: AppColors.textSecondary,
-                        fontSize: 14,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    // IconButton(
-                    //   icon: const Icon(
-                    //     Icons.fingerprint_rounded,
-                    //     size: 48,
-                    //     color: AppColors.primary,
-                    //   ),
-                    //   onPressed: () {},
-                    // ),
-                    // Text(
-                    //   'ফিঙ্গারপ্রিন্ট ব্যবহার করুন',
-                    //   style: GoogleFonts.hindSiliguri(
-                    //     fontSize: 12,
-                    //     color: AppColors.textSecondary,
-                    //   ),
-                    // ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const SignupScreen(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        'নতুন তৈরি করুন',
+                        style: GoogleFonts.hindSiliguri(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-              ),
-              // const SizedBox(height: 48),
-
-              // Don't have an account?
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'অ্যাকাউন্ট নেই?',
-                    style: GoogleFonts.hindSiliguri(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const SignupScreen(),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      'নতুন তৈরি করুন',
-                      style: GoogleFonts.hindSiliguri(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
