@@ -80,17 +80,36 @@ class BillingProvider with ChangeNotifier {
   }) async {
     final printerHelper = PrinterHelper();
 
+    // Auto-connect if not connected
     if (!printerHelper.isConnected) {
-      final savedMac = Hive.box('settings').get('printer_mac');
-      if (savedMac != null) {
-        final connected = await printerHelper.connect(savedMac);
-        if (!connected) {
-          _error = 'Failed to auto-connect to printer!';
+      final settings = Hive.box('settings');
+      final type = settings.get('printer_type'); // 'bluetooth' or 'wifi'
+      
+      bool connected = false;
+      
+      if (type == 'bluetooth') {
+        final savedMac = settings.get('printer_mac');
+        if (savedMac != null) {
+          _isPrinting = true;
           notifyListeners();
-          return;
+          connected = await printerHelper.connectBluetooth(savedMac);
         }
-      } else {
-        _error = 'Printer not connected & no saved printer found!';
+      } else if (type == 'wifi') {
+        final savedIp = settings.get('printer_ip');
+        if (savedIp != null) {
+          _isPrinting = true;
+          notifyListeners();
+          connected = await printerHelper.connectWifi(savedIp);
+        }
+      }
+
+      if (!connected && type != null) {
+        _isPrinting = false;
+        _error = 'প্রিন্টারের সাথে সংযোগ করা সম্ভব হয়নি। সংযোগ পরীক্ষা করুন।';
+        notifyListeners();
+        return;
+      } else if (type == null) {
+        _error = 'প্রিন্টার সংযুক্ত নেই। অনুগ্রহ করে সেটিংস থেকে প্রিন্টার যুক্ত করুন।';
         notifyListeners();
         return;
       }
@@ -124,7 +143,7 @@ class BillingProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _isPrinting = false;
-      _error = 'Print failed: $e';
+      _error = 'প্রিন্ট করতে সমস্যা হয়েছে: $e';
       notifyListeners();
     }
   }

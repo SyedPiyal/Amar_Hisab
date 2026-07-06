@@ -78,6 +78,7 @@ class _BillingPageState extends State<BillingPage> {
               provider.clearError();
               
               if (errorMsg.startsWith('Product not found:')) {
+                print("working fine");
                 final barcode = errorMsg.split(':')[1].trim();
                 _showAddProductDialog(barcode);
               } else {

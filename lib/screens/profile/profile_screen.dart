@@ -9,6 +9,7 @@ import 'personal_info_screen.dart';
 import 'security_password_screen.dart';
 import 'payment_methods_screen.dart';
 import 'data_backup_screen.dart';
+import 'printer_settings_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -89,6 +90,12 @@ class ProfileScreen extends StatelessWidget {
               'নিরাপত্তা ও পাসওয়ার্ড',
               Icons.security_outlined,
               const SecurityPasswordScreen(),
+            ),
+            _buildProfileAction(
+              context,
+              'প্রিন্টার সেটিংস',
+              Icons.print_outlined,
+              const PrinterSettingsScreen(),
             ),
             _buildProfileAction(
               context,

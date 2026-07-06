@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -20,14 +21,13 @@ class PrinterHelper {
   factory PrinterHelper() => _instance;
   PrinterHelper._internal();
 
-  bool _isConnected = false;
-  bool get isConnected => _isConnected;
+  bool _isBluetoothConnected = false;
+  bool _isWifiConnected = false;
+  Socket? _socket;
+
+  bool get isConnected => _isBluetoothConnected || _isWifiConnected;
 
   Future<bool> checkPermission() async {
-    // Request Bluetooth and Location permissions
-    // Android 12+ needs BLUETOOTH_SCAN, BLUETOOTH_CONNECT
-    // Older Android needs BLUETOOTH, BLUETOOTH_ADMIN, ACCESS_FINE_LOCATION
-
     Map<Permission, PermissionStatus> statuses = await [
       Permission.bluetooth,
       Permission.bluetoothScan,
@@ -48,59 +48,60 @@ class PrinterHelper {
     }
   }
 
-  Future<bool> connect(String macAddress) async {
+  Future<bool> connectBluetooth(String macAddress) async {
     try {
+      await disconnect(); // Disconnect existing
       final bool result =
           await PrintBluetoothThermal.connect(macPrinterAddress: macAddress);
-      _isConnected = result;
+      _isBluetoothConnected = result;
       return result;
     } catch (e) {
-      _isConnected = false;
+      _isBluetoothConnected = false;
+      return false;
+    }
+  }
+
+  Future<bool> connectWifi(String ipAddress, {int port = 9100}) async {
+    try {
+      await disconnect(); // Disconnect existing
+      _socket = await Socket.connect(ipAddress, port, timeout: const Duration(seconds: 5));
+      _isWifiConnected = true;
+      return true;
+    } catch (e) {
+      _isWifiConnected = false;
       return false;
     }
   }
 
   Future<bool> disconnect() async {
     try {
-      final bool result = await PrintBluetoothThermal.disconnect;
-      _isConnected =
-          !result; // If disconnected successfully, isConnected is false
-      return result;
+      if (_isBluetoothConnected) {
+        await PrintBluetoothThermal.disconnect;
+        _isBluetoothConnected = false;
+      }
+      if (_isWifiConnected) {
+        _socket?.destroy(); // Fixed: Removed await because destroy() returns void
+        _socket = null;
+        _isWifiConnected = false;
+      }
+      return true;
     } catch (e) {
       return false;
     }
   }
 
-  Future<void> printText(String text) async {
-    if (!_isConnected) return;
-
-    // Simple text printing
-    // We can use bytes for advanced formatting
-    // But plugin supports basic text or bytes
-
-    // Checking battery or connection status
-    final bool connectionStatus = await PrintBluetoothThermal.connectionStatus;
-    if (connectionStatus) {
-      // Plugin allows sending bytes. We need ESC/POS commands for text.
-      // However, the plugin might have helper.
-      // Looking at doc, `writeBytes` or `writeString`?
-      // The plugin `print_bluetooth_thermal` mainly exposes `writeBytes`.
-      // We need a generator. `esc_pos_utils` is common but not requested.
-      // But wait, `print_bluetooth_thermal` example often uses `capability_profile` and `generator`.
-      // I don't have `esc_pos_utils` or similar in my pubspec.
-      // The user requested `print_bluetooth_thermal`.
-      // Let's assume we can send raw string bytes or use a simple helper.
-      // Actually without `esc_pos_utils`, formatting is hard.
-      // I will try to use `esc_pos_utils_plus` or similar if I can add it, but user gave specific packages.
-      // Wait, user allowed "use required plugins".
-      // "suggest barcode scanner ... and use required plugins".
-      // So I can add `esc_pos_utils_plus`.
-
-      // For now, I'll assume simple text printing by converting string to bytes.
-      // ASCII bytes.
-      List<int> bytes = text.codeUnits;
+  Future<void> _writeBytes(List<int> bytes) async {
+    if (_isBluetoothConnected) {
       await PrintBluetoothThermal.writeBytes(bytes);
+    } else if (_isWifiConnected && _socket != null) {
+      _socket!.add(bytes);
+      await _socket!.flush();
     }
+  }
+
+  Future<void> printText(String text) async {
+    if (!isConnected) return;
+    await _writeBytes(_textToBytes(text));
   }
 
   Future<void> printReceipt({
@@ -108,26 +109,22 @@ class PrinterHelper {
     required String address1,
     required String address2,
     required String phone,
-    required List<Map<String, dynamic>> items, // Name, Qty, Price, Total
+    required List<Map<String, dynamic>> items,
     required double total,
     required String footer,
   }) async {
-    if (!_isConnected) return;
+    if (!isConnected) return;
 
-    // Construct ESC/POS bytes manually or using helper
     List<int> bytes = [];
 
-    // Init
     bytes += EscPos.init;
 
-    // Shop Name (Center, Bold, Large)
     bytes += EscPos.alignCenter;
     bytes += EscPos.boldOn;
     bytes += EscPos.textLarge;
     bytes += _textToBytes(shopName);
     bytes += EscPos.lineFeed;
 
-    // Address & Phone (Normal, Center)
     bytes += EscPos.textNormal;
     bytes += EscPos.boldOff;
     if (address1.isNotEmpty) {
@@ -141,7 +138,6 @@ class PrinterHelper {
     bytes += _textToBytes(phone);
     bytes += EscPos.lineFeed;
 
-    // Date and Time
     String formattedDate =
         DateFormat('dd-MM-yyyy hh:mm a').format(DateTime.now());
     bytes += _textToBytes(formattedDate);
@@ -150,14 +146,12 @@ class PrinterHelper {
     bytes += _textToBytes('--------------------------------');
     bytes += EscPos.lineFeed;
 
-    // Header (Align Left)
     bytes += EscPos.alignLeft;
     bytes += _textToBytes('Item            Price   Total');
     bytes += EscPos.lineFeed;
     bytes += _textToBytes('--------------------------------');
     bytes += EscPos.lineFeed;
 
-    // Items
     for (var item in items) {
       String name = item['name'].toString();
       String qty = item['qty'].toString();
@@ -175,7 +169,6 @@ class PrinterHelper {
     bytes += _textToBytes('--------------------------------');
     bytes += EscPos.lineFeed;
 
-    // Total (Align Right)
     bytes += EscPos.alignRight;
     bytes += EscPos.boldOn;
     bytes += _textToBytes('TOTAL: $total');
@@ -183,19 +176,17 @@ class PrinterHelper {
     bytes += EscPos.boldOff;
     bytes += EscPos.lineFeed;
 
-    // Footer (Center)
     bytes += EscPos.alignCenter;
     bytes += _textToBytes(footer);
     bytes += EscPos.lineFeed;
-    bytes += EscPos.lineFeed; // One line space after footer
     bytes += EscPos.lineFeed;
-    bytes += EscPos.lineFeed; // Additional Feed
+    bytes += EscPos.lineFeed;
+    bytes += EscPos.lineFeed;
 
-    await PrintBluetoothThermal.writeBytes(bytes);
+    await _writeBytes(bytes);
   }
 
   List<int> _textToBytes(String text) {
-    // Should verify encoding, but Latin-1 usually works for basic printers
     return List.from(text.codeUnits);
   }
 }

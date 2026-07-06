@@ -5,6 +5,7 @@ import 'package:pretty_qr_code/pretty_qr_code.dart';
 
 import '../../../providers/billing/shop_provider.dart';
 import '../../../providers/billing/billing_provider.dart';
+import '../../profile/printer_settings_screen.dart';
 
 class CheckoutPage extends StatefulWidget {
   const CheckoutPage({super.key});
@@ -36,6 +37,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 Navigator.pop(context);
               },
             ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.print_outlined),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const PrinterSettingsScreen()),
+                  );
+                },
+                tooltip: 'প্রিন্টার সেটিংস',
+              ),
+            ],
           ),
           body: Consumer<BillingProvider>(
             builder: (context, billingState, child) {
@@ -44,6 +56,27 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text('সফলভাবে প্রিন্ট করা হয়েছে', style: GoogleFonts.hindSiliguri()),
                       backgroundColor: Colors.green));
+                }
+                
+                if (billingState.error != null) {
+                  final errorMessage = billingState.error!;
+                  billingState.clearError();
+                  
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(errorMessage, style: GoogleFonts.hindSiliguri()),
+                    backgroundColor: Colors.red,
+                    action: errorMessage.contains('Printer not connected') 
+                      ? SnackBarAction(
+                          label: 'সেটিংস',
+                          textColor: Colors.white,
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (context) => const PrinterSettingsScreen()),
+                            );
+                          },
+                        )
+                      : null,
+                  ));
                 }
               });
 
@@ -126,7 +159,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                             width: 180,
                                             height: 180,
                                             child: PrettyQrView.data(
-                                              data: 'upi://pay?pa=$emailAddress&pn=$shopName&am=${billingState.totalAmount.toStringAsFixed(2)}&cu=INR',
+                                              data: 'upi://pay?pa=$emailAddress&pn=$shopName&am=${billingState.totalAmount.toStringAsFixed(2)}&cu=BDT',
                                             ),
                                           ),
                                         ],
@@ -150,20 +183,24 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: ElevatedButton.icon(
-                                onPressed: () {
-                                  if (shopState.shop != null) {
-                                    billingState.printReceipt(
-                                        shopName: shopState.shop!.name,
-                                        address1: shopState.shop!.addressLine1,
-                                        address2: shopState.shop!.addressLine2,
-                                        phone: shopState.shop!.phoneNumber,
-                                        footer: shopState.shop!.footerText);
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('দোকানের তথ্য লোড করা হয়নি', style: GoogleFonts.hindSiliguri()), backgroundColor: Colors.red));
-                                  }
-                                },
-                                label: Text('রসিদ প্রিন্ট করুন', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
-                                icon: const Icon(Icons.print),
+                                onPressed: billingState.isPrinting 
+                                  ? null 
+                                  : () {
+                                    if (shopState.shop != null) {
+                                      billingState.printReceipt(
+                                          shopName: shopState.shop!.name,
+                                          address1: shopState.shop!.addressLine1,
+                                          address2: shopState.shop!.addressLine2,
+                                          phone: shopState.shop!.phoneNumber,
+                                          footer: shopState.shop!.footerText);
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('দোকানের তথ্য লোড করা হয়নি', style: GoogleFonts.hindSiliguri()), backgroundColor: Colors.red));
+                                    }
+                                  },
+                                label: billingState.isPrinting 
+                                  ? const CircularProgressIndicator(color: Colors.white)
+                                  : Text('রসিদ প্রিন্ট করুন', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
+                                icon: billingState.isPrinting ? const SizedBox.shrink() : const Icon(Icons.print),
                                 style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
                               ),
                             ),
