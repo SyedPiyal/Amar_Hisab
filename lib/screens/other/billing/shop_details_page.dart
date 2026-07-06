@@ -17,7 +17,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
   late TextEditingController _address1Controller;
   late TextEditingController _address2Controller;
   late TextEditingController _phoneController;
-  late TextEditingController _upiController;
+  late TextEditingController _emailController;
   late TextEditingController _footerController;
 
   @override
@@ -27,7 +27,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
     _address1Controller = TextEditingController();
     _address2Controller = TextEditingController();
     _phoneController = TextEditingController();
-    _upiController = TextEditingController();
+    _emailController = TextEditingController();
     _footerController = TextEditingController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -44,7 +44,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
       _address1Controller.text = shop.addressLine1;
       _address2Controller.text = shop.addressLine2;
       _phoneController.text = shop.phoneNumber;
-      _upiController.text = shop.upiId;
+      _emailController.text = shop.emailAddress;
       _footerController.text = shop.footerText;
     }
   }
@@ -55,7 +55,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
     _address1Controller.dispose();
     _address2Controller.dispose();
     _phoneController.dispose();
-    _upiController.dispose();
+    _emailController.dispose();
     _footerController.dispose();
     super.dispose();
   }
@@ -67,7 +67,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
         addressLine1: _address1Controller.text,
         addressLine2: _address2Controller.text,
         phoneNumber: _phoneController.text,
-        upiId: _upiController.text,
+        emailAddress: _emailController.text,
         footerText: _footerController.text,
       );
 
@@ -148,11 +148,12 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                     validator: (val) => val == null || val.isEmpty ? 'প্রয়োজনীয়' : null,
                   ),
                   const SizedBox(height: 15),
-                  Text('ইউপিআই আইডি (UPI ID)', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
+                  Text('ইমেইল এড্রেস', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   _buildTextField(
-                    controller: _upiController,
-                    hint: 'example@upi',
+                    controller: _emailController,
+                    hint: 'example@mail.com',
+                    keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 15),
                   Row(

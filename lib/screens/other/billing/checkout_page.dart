@@ -49,7 +49,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
               return Consumer<ShopProvider>(
                   builder: (context, shopState, child) {
-                String upiId = shopState.shop?.upiId ?? '';
+                String emailAddress = shopState.shop?.emailAddress ?? '';
                 String shopName = shopState.shop?.name ?? 'Shop';
 
                 return Column(
@@ -117,7 +117,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             child: Column(
                               children: [
                                 const SizedBox(height: 8),
-                                upiId.isNotEmpty
+                                emailAddress.isNotEmpty
                                     ? Column(
                                         children: [
                                           Text('পেমেন্ট করতে স্ক্যান করুন', style: GoogleFonts.hindSiliguri(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -126,7 +126,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                             width: 180,
                                             height: 180,
                                             child: PrettyQrView.data(
-                                              data: 'upi://pay?pa=$upiId&pn=$shopName&am=${billingState.totalAmount.toStringAsFixed(2)}&cu=INR',
+                                              data: 'upi://pay?pa=$emailAddress&pn=$shopName&am=${billingState.totalAmount.toStringAsFixed(2)}&cu=INR',
                                             ),
                                           ),
                                         ],

@@ -29,11 +29,11 @@ class ShopProvider with ChangeNotifier {
         _shop = s;
       } else {
         _shop = const Shop(
-          name: 'Dinesh Shop',
-          addressLine1: 'Samrajpet, Mecheri',
-          addressLine2: 'Salem - 636453',
-          phoneNumber: '+917010674588',
-          upiId: 'dineshsowndar@oksbi',
+          name: 'Rahim Enterprise',
+          addressLine1: 'Mirpur,Dhaka',
+          addressLine2: '356/221-2',
+          phoneNumber: '+01*********',
+          emailAddress: 'rahim226@gmail.com',
           footerText: 'Thank you, Visit again!!!',
         );
       }

@@ -14,7 +14,7 @@ class Shop extends Equatable {
   @HiveField(3)
   final String phoneNumber;
   @HiveField(4)
-  final String upiId;
+  final String emailAddress;
   @HiveField(5)
   final String footerText;
 
@@ -23,7 +23,7 @@ class Shop extends Equatable {
     this.addressLine1 = '',
     this.addressLine2 = '',
     this.phoneNumber = '',
-    this.upiId = '',
+    this.emailAddress = '',
     this.footerText = '',
   });
 
@@ -32,7 +32,7 @@ class Shop extends Equatable {
     String? addressLine1,
     String? addressLine2,
     String? phoneNumber,
-    String? upiId,
+    String? emailAddress,
     String? footerText,
   }) {
     return Shop(
@@ -40,12 +40,12 @@ class Shop extends Equatable {
       addressLine1: addressLine1 ?? this.addressLine1,
       addressLine2: addressLine2 ?? this.addressLine2,
       phoneNumber: phoneNumber ?? this.phoneNumber,
-      upiId: upiId ?? this.upiId,
+      emailAddress: emailAddress ?? this.emailAddress,
       footerText: footerText ?? this.footerText,
     );
   }
 
   @override
   List<Object?> get props =>
-      [name, addressLine1, addressLine2, phoneNumber, upiId, footerText];
+      [name, addressLine1, addressLine2, phoneNumber, emailAddress, footerText];
 }
