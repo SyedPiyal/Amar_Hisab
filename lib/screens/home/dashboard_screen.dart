@@ -50,6 +50,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         listen: false,
       );
 
+      // Ensure data is loaded
+      accountProvider.loadAccounts();
+      txProvider.loadTransactions();
+
       // Load and process scheduled transactions
       scheduledProvider.loadSchedules().then((_) {
         scheduledProvider.processDueTransactions(txProvider, accountProvider);
@@ -236,8 +240,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 16),
             TopExpenses(),
             const SizedBox(height: 20),
-
-            // Financial Health Chart (REAL DATA with Income & Expense)
             const FinancialHealthChart(),
             const SizedBox(height: 20),
           ],

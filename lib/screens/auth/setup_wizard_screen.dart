@@ -19,14 +19,10 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   int _currentStep = 0;
   final PageController _pageController = PageController();
 
-  // Step 1: Preferences
   String _selectedCurrency = 'BDT';
   String _selectedLanguage = 'bn';
-
-  // Step 2: Mode
   bool _isAdvancedMode = false;
 
-  // Step 3: Opening Balances
   final TextEditingController _cashBalanceController =
       TextEditingController(text: '0');
   final TextEditingController _bankBalanceController =
@@ -48,7 +44,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         listen: false,
       );
 
-      // Save Settings
       await settingsProvider.updateSettings(
         currency: _selectedCurrency,
         language: _selectedLanguage,
@@ -56,29 +51,37 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         isFirstLaunch: false,
       );
 
-      // Initialize default accounts with opening balances
-      if (accountProvider.accounts.isEmpty) {
-        double cashVal = double.tryParse(_cashBalanceController.text) ?? 0.0;
-        double bankVal = double.tryParse(_bankBalanceController.text) ?? 0.0;
+      // Improved parsing to handle commas and other characters
+      double parseBalance(String val) {
+        return double.tryParse(val.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
+      }
 
-        await accountProvider.addAccount(
-          Account(
-            id: 'cash_001',
-            name: 'নগদ (Cash)',
-            type: 'Assets',
-            balance: cashVal,
-            iconName: 'cash_icon',
-          ),
-        );
-        await accountProvider.addAccount(
-          Account(
-            id: 'bank_001',
-            name: 'ব্যাংক (Bank)',
-            type: 'Assets',
-            balance: bankVal,
-            iconName: 'bank_icon',
-          ),
-        );
+      double cashVal = parseBalance(_cashBalanceController.text);
+      double bankVal = parseBalance(_bankBalanceController.text);
+
+      // Always ensure default accounts are initialized with the entered balances
+      await accountProvider.addAccount(
+        Account(
+          id: 'cash_001',
+          name: 'নগদ (Cash)',
+          type: 'Assets',
+          balance: cashVal,
+          iconName: 'cash_icon',
+        ),
+      );
+      
+      await accountProvider.addAccount(
+        Account(
+          id: 'bank_001',
+          name: 'ব্যাংক (Bank)',
+          type: 'Assets',
+          balance: bankVal,
+          iconName: 'bank_icon',
+        ),
+      );
+
+      // Add MFS if it doesn't exist
+      if (!accountProvider.accounts.any((a) => a.id == 'mfs_001')) {
         await accountProvider.addAccount(
           Account(
             id: 'mfs_001',
@@ -114,7 +117,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            // Progress Indicator
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Row(
@@ -191,12 +193,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       icon: Icons.language_rounded,
       content: Column(
         children: [
-          _buildDropdownItem(
-            label: 'মুদ্রা (Currency)',
-            value: _selectedCurrency,
-            items: ['BDT', 'USD', 'EUR', 'GBP'],
-            onChanged: (val) => setState(() => _selectedCurrency = val!),
-          ),
           const SizedBox(height: 16),
           _buildDropdownItem(
             label: 'ভাষা (Language)',
@@ -227,37 +223,10 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           const SizedBox(height: 16),
           _buildModeCard(
             title: 'অ্যাডভান্সড মোড (Advanced Mode)',
-            description:
-                'ডাবল-এন্ট্রি অ্যাকাউন্টিং। যেখানে ট্রানজ্যাকশন ডেবিট এবং ক্রেডিট হয়।',
+            description: 'ডাবল-এন্ট্রি অ্যাকাউন্টিং। যেখানে ট্রানজ্যাকশন ডেবিট এবং ক্রেডিট হয়।',
             icon: Icons.account_balance_rounded,
             isSelected: _isAdvancedMode,
             onTap: () => setState(() => _isAdvancedMode = true),
-            footer: _isAdvancedMode
-                ? Container(
-                    margin: const EdgeInsets.only(top: 12),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.info_outline, size: 16, color: Colors.amber),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'ডাবল-এন্ট্রি মানে প্রতিটি লেনদেনের দুটি অংশ থাকবে: টাকা কোথা থেকে এসেছে এবং কোথায় গেছে।',
-                            style: GoogleFonts.hindSiliguri(
-                              fontSize: 12,
-                              color: Colors.amber.shade900,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : null,
           ),
         ],
       ),
@@ -307,8 +276,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   Widget _buildCompletionStep() {
     return _buildStepLayout(
       title: 'সব সেট!',
-      subtitle:
-          'আপনার অ্যাকাউন্টগুলো তৈরি হয়ে গেছে। অ্যাপটি ব্যবহারের জন্য আপনি এখন প্রস্তুত।',
+      subtitle: 'আপনার অ্যাকাউন্টগুলো তৈরি হয়ে গেছে। অ্যাপটি ব্যবহারের জন্য আপনি এখন প্রস্তুত।',
       icon: Icons.check_circle_outline_rounded,
       isCenter: true,
       content: Column(
@@ -342,8 +310,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
-        crossAxisAlignment:
-            isCenter ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+        crossAxisAlignment: isCenter ? CrossAxisAlignment.center : CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 10),
           Container(
@@ -411,20 +378,13 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
               value: value,
               isExpanded: true,
               onChanged: onChanged,
-              items: isMap
-                  ? (items as Map<String, String>)
-                      .entries
-                      .map((e) => DropdownMenuItem(
-                            value: e.key,
-                            child: Text(e.value, style: GoogleFonts.hindSiliguri()),
-                          ))
-                      .toList()
-                  : (items as List<String>)
-                      .map((e) => DropdownMenuItem(
-                            value: e,
-                            child: Text(e, style: GoogleFonts.inter()),
-                          ))
-                      .toList(),
+              items: (items as Map<String, String>)
+                  .entries
+                  .map((e) => DropdownMenuItem(
+                        value: e.key,
+                        child: Text(e.value, style: GoogleFonts.hindSiliguri()),
+                      ))
+                  .toList(),
             ),
           ),
         ),
@@ -438,7 +398,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     required IconData icon,
     required bool isSelected,
     required VoidCallback onTap,
-    Widget? footer,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -453,52 +412,26 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
             width: isSelected ? 2 : 1,
           ),
         ),
-        child: Column(
+        child: Row(
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: isSelected ? Colors.white : AppColors.primary,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: GoogleFonts.hindSiliguri(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        description,
-                        style: GoogleFonts.hindSiliguri(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (isSelected)
-                  const Icon(Icons.check_circle_rounded, color: AppColors.primary),
-              ],
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.primary : AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: isSelected ? Colors.white : AppColors.primary),
             ),
-            if (footer != null) footer,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
+                  Text(description, style: GoogleFonts.hindSiliguri(fontSize: 12, color: AppColors.textSecondary)),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -533,10 +466,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
             filled: true,
             fillColor: Colors.white,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: AppColors.border),
             ),

@@ -84,20 +84,24 @@ class SyncMapper {
       id: map['id'] ?? '',
       title: map['title'] ?? '',
       targetAmount: (map['targetAmount'] as num?)?.toDouble() ?? 0.0,
+      currentAmount: (map['currentAmount'] as num?)?.toDouble() ?? 0.0,
+      iconCodePoint: map['iconCodePoint'] ?? 0,
       targetDate: map['targetDate'] != null ? DateTime.parse(map['targetDate']) : null,
-    )..currentAmount = (map['currentAmount'] as num?)?.toDouble() ?? 0.0;
+      createdAt: map['createdAt'] != null ? DateTime.parse(map['createdAt']) : DateTime.now(),
+    );
   }
 
   static InventoryItem mapToInventoryItem(Map<String, dynamic> map) {
     return InventoryItem(
       id: map['id'] ?? '',
       name: map['name'] ?? '',
-      category: map['category'] ?? '',
-      unit: map['unit'] ?? '',
-      unitPrice: (map['unitPrice'] as num?)?.toDouble() ?? 0.0,
-      lowStockThreshold: (map['lowStockThreshold'] as num?)?.toDouble() ?? 0.0,
-    )
-      ..stockQuantity = (map['stockQuantity'] as num?)?.toDouble() ?? 0.0
-      ..lastUpdated = map['lastUpdated'] != null ? DateTime.parse(map['lastUpdated']) : DateTime.now();
+      barcode: map['barcode'],
+      purchasePrice: (map['purchasePrice'] as num?)?.toDouble() ?? 0.0,
+      salePrice: (map['salePrice'] as num?)?.toDouble() ?? 0.0,
+      stockQuantity: (map['stockQuantity'] as num?)?.toDouble() ?? 0.0,
+      unit: map['unit'] ?? 'Piece',
+      lowStockThreshold: (map['lowStockThreshold'] as num?)?.toDouble() ?? 5.0,
+      lastUpdated: map['lastUpdated'] != null ? DateTime.parse(map['lastUpdated']) : DateTime.now(),
+    );
   }
 }

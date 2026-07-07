@@ -10,6 +10,10 @@ class TransactionProvider with ChangeNotifier {
   List<Transaction> _transactions = [];
   final SyncService _syncService = SyncService();
 
+  TransactionProvider() {
+    loadTransactions();
+  }
+
   List<Transaction> get transactions => _transactions;
 
   Future<void> loadTransactions() async {
@@ -48,8 +52,6 @@ class TransactionProvider with ChangeNotifier {
     if (transaction.inventoryItemId != null && 
         transaction.inventoryQuantity != null && 
         inventoryProvider != null) {
-      // If it's Income (Sale), we deduct from stock
-      // If it's Expense (Purchase), we add to stock
       double adjustment = 0;
       if (transaction.type == 'Income') {
         adjustment = -transaction.inventoryQuantity!;
@@ -80,10 +82,8 @@ class TransactionProvider with ChangeNotifier {
     Account? creditAccount,
     InventoryProvider? inventoryProvider,
   }) async {
-    // 1. Revert Account Balance
     if (account != null) {
       if (creditAccount != null) {
-        // Revert Transfer: Credit was deducted, Account was added
         creditAccount.balance += transaction.amount;
         account.balance -= transaction.amount;
         await creditAccount.save();
@@ -98,12 +98,9 @@ class TransactionProvider with ChangeNotifier {
       }
     }
 
-    // 2. Revert Inventory Stock
     if (transaction.inventoryItemId != null && 
         transaction.inventoryQuantity != null && 
         inventoryProvider != null) {
-      // Revert Income (Sale): Add back to stock
-      // Revert Expense (Purchase): Deduct from stock
       double reversalAdjustment = 0;
       if (transaction.type == 'Income') {
         reversalAdjustment = transaction.inventoryQuantity!;

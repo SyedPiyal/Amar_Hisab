@@ -80,10 +80,11 @@ class InventoryProvider with ChangeNotifier {
     return {
       'id': item.id,
       'name': item.name,
-      'category': item.category,
+      'barcode': item.barcode,
+      'purchasePrice': item.purchasePrice,
+      'salePrice': item.salePrice,
       'stockQuantity': item.stockQuantity,
       'unit': item.unit,
-      'unitPrice': item.unitPrice,
       'lowStockThreshold': item.lowStockThreshold,
       'lastUpdated': item.lastUpdated.toIso8601String(),
     };

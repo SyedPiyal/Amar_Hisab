@@ -8,6 +8,10 @@ class AccountProvider with ChangeNotifier {
   List<Account> _accounts = [];
   final SyncService _syncService = SyncService();
 
+  AccountProvider() {
+    loadAccounts();
+  }
+
   List<Account> get accounts => _accounts;
 
   double get totalBalance {
@@ -16,20 +20,29 @@ class AccountProvider with ChangeNotifier {
 
   double get cashBalance {
     return _accounts
-        .where((a) => a.name.contains('Cash') || a.name.contains('নগদ'))
+        .where((a) =>
+            a.name.toLowerCase().contains('cash') ||
+            a.name.contains('নগদ'))
         .fold(0.0, (sum, item) => sum + item.balance);
   }
 
   double get bankBalance {
     return _accounts
-        .where((a) => a.name.contains('Bank') || a.name.contains('ব্যাংক'))
+        .where((a) =>
+            a.name.toLowerCase().contains('bank') ||
+            a.name.contains('ব্যাংক') ||
+            a.name.toLowerCase().contains('account'))
         .fold(0.0, (sum, item) => sum + item.balance);
   }
 
   Future<void> loadAccounts() async {
-    final box = await Hive.openBox<Account>(boxName);
-    _accounts = box.values.toList();
-    notifyListeners();
+    try {
+      final box = await Hive.openBox<Account>(boxName);
+      _accounts = box.values.toList();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading accounts: $e');
+    }
   }
 
   Future<void> addAccount(Account account) async {
@@ -48,6 +61,9 @@ class AccountProvider with ChangeNotifier {
 
   Future<void> updateAccount(Account account) async {
     await account.save();
+    // Refresh the list from the box to ensure consistency
+    final box = await Hive.openBox<Account>(boxName);
+    _accounts = box.values.toList();
     notifyListeners();
 
     await _syncService.enqueueOperation(

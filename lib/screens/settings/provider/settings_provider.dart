@@ -70,7 +70,7 @@ class SettingsProvider with ChangeNotifier {
   bool get isAdvancedMode => _settings?.isAdvancedMode ?? false;
   String get currency => _settings?.currency ?? 'BDT';
   String get language => _settings?.language ?? 'bn';
-  double get monthlySavingsGoal => _settings?.monthlySavingsGoal ?? 20000.0;
+  double get monthlySavingsGoal => _settings?.monthlySavingsGoal ?? 0.0;
   String get geminiApiKey => _settings?.geminiApiKey ?? '';
   bool get isCloudBackupEnabled => _settings?.isCloudBackupEnabled ?? false;
   bool get darkModeEnabled => _settings?.darkModeEnabled ?? false;

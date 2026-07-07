@@ -82,11 +82,7 @@ class _IntroScreenState extends State<IntroScreen> {
               color: page.color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              page.icon,
-              size: 100,
-              color: page.color,
-            ),
+            child: Icon(page.icon, size: 100, color: page.color),
           ),
           const SizedBox(height: 60),
           Text(
@@ -168,16 +164,6 @@ class _IntroScreenState extends State<IntroScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          TextButton(
-            onPressed: () {}, // "Import Data" logic could go here
-            child: Text(
-              'ডেটা ইম্পোর্ট করুন',
-              style: GoogleFonts.hindSiliguri(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-              ),
-            ),
-          ),
         ],
       ),
     );

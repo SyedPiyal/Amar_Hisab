@@ -18,13 +18,13 @@ class NetBalanceCard extends StatelessWidget {
     final transactionProvider = Provider.of<TransactionProvider>(context);
 
     final currencySymbol = settings.currency == 'BDT'
-        ? '৳ '
+        ? ' ৳ '
         : (settings.currency == 'USD' ? '\$' : '${settings.currency} ');
 
     final balanceFormat = NumberFormat.currency(
       locale: settings.language == 'bn' ? 'bn_BD' : 'en_US',
       symbol: currencySymbol,
-      decimalDigits: 2,
+      decimalDigits: 0,
     );
 
     double totalIncome = 0.0;
@@ -70,7 +70,7 @@ class NetBalanceCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               balanceFormat.format(
-                accountProvider.totalBalance,
+                accountProvider.totalBalance.round(),
               ),
               style: GoogleFonts.hindSiliguri(
                 color: Colors.white,
@@ -84,12 +84,12 @@ class NetBalanceCard extends StatelessWidget {
               children: [
                 _buildBalanceInfo(
                   'আয় (Income)',
-                  balanceFormat.format(totalIncome),
+                  balanceFormat.format(totalIncome.round()),
                   Icons.arrow_downward_rounded,
                 ),
                 _buildBalanceInfo(
                   'ব্যয় (Expense)',
-                  balanceFormat.format(totalExpense),
+                  balanceFormat.format(totalExpense.round()),
                   Icons.arrow_upward_rounded,
                 ),
               ],
@@ -103,14 +103,14 @@ class NetBalanceCard extends StatelessWidget {
                 _buildBalanceInfo(
                   'নগদ (Cash)',
                   balanceFormat.format(
-                    accountProvider.cashBalance,
+                    accountProvider.cashBalance.round(),
                   ),
                   Icons.money_rounded,
                 ),
                 _buildBalanceInfo(
                   'ব্যাংক (Bank)',
                   balanceFormat.format(
-                    accountProvider.bankBalance,
+                    accountProvider.bankBalance.round(),
                   ),
                   Icons.food_bank_rounded,
                 ),
