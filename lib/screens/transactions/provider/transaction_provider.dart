@@ -3,10 +3,12 @@ import 'package:hive/hive.dart';
 import '../../../models/transaction.dart';
 import '../../../models/account.dart';
 import '../../../providers/inventory_provider.dart';
+import '../../../services/sync_service.dart';
 
 class TransactionProvider with ChangeNotifier {
   static const String boxName = 'transactions';
   List<Transaction> _transactions = [];
+  final SyncService _syncService = SyncService();
 
   List<Transaction> get transactions => _transactions;
 
@@ -63,6 +65,13 @@ class TransactionProvider with ChangeNotifier {
     _transactions = box.values.toList()
       ..sort((a, b) => b.date.compareTo(a.date));
     notifyListeners();
+
+    await _syncService.enqueueOperation(
+      boxName,
+      transaction.id,
+      'CREATE',
+      _transactionToMap(transaction),
+    );
   }
 
   Future<void> deleteTransaction(
@@ -107,11 +116,41 @@ class TransactionProvider with ChangeNotifier {
       }
     }
 
+    final txId = transaction.id;
     await transaction.delete();
     final box = await Hive.openBox<Transaction>(boxName);
     _transactions = box.values.toList()
       ..sort((a, b) => b.date.compareTo(a.date));
     notifyListeners();
+
+    await _syncService.enqueueOperation(
+      boxName,
+      txId,
+      'DELETE',
+      null,
+    );
+  }
+
+  Map<String, dynamic> _transactionToMap(Transaction tx) {
+    return {
+      'id': tx.id,
+      'title': tx.title,
+      'amount': tx.amount,
+      'date': tx.date.toIso8601String(),
+      'accountId': tx.accountId,
+      'type': tx.type,
+      'category': tx.category,
+      'creditAccountId': tx.creditAccountId,
+      'debitAccountId': tx.debitAccountId,
+      'isSplit': tx.isSplit,
+      'splitDetails': tx.splitDetails,
+      'debtId': tx.debtId,
+      'attachmentPaths': tx.attachmentPaths,
+      'taxPercentage': tx.taxPercentage,
+      'taxAmount': tx.taxAmount,
+      'inventoryItemId': tx.inventoryItemId,
+      'inventoryQuantity': tx.inventoryQuantity,
+    };
   }
 
   double getMonthlySavings() {

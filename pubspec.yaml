@@ -60,6 +60,12 @@ dependencies:
   vibration: ^3.1.8
   network_info_plus: ^8.2.0
   ping_discover_network_plus: ^0.0.5
+  firebase_core: ^3.15.2
+  firebase_auth: ^5.5.0
+  cloud_firestore: ^5.6.3
+  connectivity_plus: ^6.1.0
+  fluttertoast: ^8.2.8
+  shared_preferences: ^2.3.2
 
 dev_dependencies:
   flutter_test:

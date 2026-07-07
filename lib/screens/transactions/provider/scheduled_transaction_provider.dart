@@ -5,10 +5,12 @@ import '../../../models/transaction.dart';
 import '../../../models/account.dart';
 import 'transaction_provider.dart';
 import '../../accounts/provider/account_provider.dart';
+import '../../../services/sync_service.dart';
 
 class ScheduledTransactionProvider with ChangeNotifier {
   static const String boxName = 'scheduled_transactions';
   List<ScheduledTransaction> _schedules = [];
+  final SyncService _syncService = SyncService();
 
   List<ScheduledTransaction> get schedules => _schedules;
 
@@ -23,18 +25,40 @@ class ScheduledTransactionProvider with ChangeNotifier {
     await box.put(schedule.id, schedule);
     _schedules = box.values.toList();
     notifyListeners();
+
+    await _syncService.enqueueOperation(
+      boxName,
+      schedule.id,
+      'CREATE',
+      _scheduleToMap(schedule),
+    );
   }
 
   Future<void> toggleSchedule(ScheduledTransaction schedule, bool isActive) async {
     schedule.isActive = isActive;
     await schedule.save();
     notifyListeners();
+
+    await _syncService.enqueueOperation(
+      boxName,
+      schedule.id,
+      'UPDATE',
+      _scheduleToMap(schedule),
+    );
   }
 
   Future<void> deleteSchedule(ScheduledTransaction schedule) async {
+    final scheduleId = schedule.id;
     await schedule.delete();
     _schedules.remove(schedule);
     notifyListeners();
+
+    await _syncService.enqueueOperation(
+      boxName,
+      scheduleId,
+      'DELETE',
+      null,
+    );
   }
 
   Future<void> processDueTransactions(
@@ -87,6 +111,13 @@ class ScheduledTransactionProvider with ChangeNotifier {
           schedule.nextDueDate = nextDate;
           await schedule.save();
           updated = true;
+
+          await _syncService.enqueueOperation(
+            boxName,
+            schedule.id,
+            'UPDATE',
+            _scheduleToMap(schedule),
+          );
         }
       }
     }
@@ -95,5 +126,19 @@ class ScheduledTransactionProvider with ChangeNotifier {
       _schedules = box.values.toList();
       notifyListeners();
     }
+  }
+
+  Map<String, dynamic> _scheduleToMap(ScheduledTransaction schedule) {
+    return {
+      'id': schedule.id,
+      'title': schedule.title,
+      'amount': schedule.amount,
+      'accountId': schedule.accountId,
+      'type': schedule.type,
+      'category': schedule.category,
+      'frequency': schedule.frequency,
+      'nextDueDate': schedule.nextDueDate.toIso8601String(),
+      'isActive': schedule.isActive,
+    };
   }
 }

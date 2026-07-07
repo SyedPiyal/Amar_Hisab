@@ -23,7 +23,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     final user = context.read<AuthProvider>().currentUser;
     _nameController = TextEditingController(text: user?.name);
     _emailController = TextEditingController(text: user?.email);
-    _phoneController = TextEditingController(text: '+৮৮০ ১৭১২-৩৪৫৬৭৮');
+    // Initialize with actual phone number from user model, default to empty string
+    _phoneController = TextEditingController(text: user?.phone ?? '');
   }
 
   @override
@@ -36,15 +37,29 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
 
   void _saveProfile() async {
     if (_formKey.currentState!.validate()) {
-      await context.read<AuthProvider>().updateUserProfile(
-            _nameController.text,
-            _emailController.text,
+      try {
+        // Update user profile in Firebase Firestore and Local Hive via AuthProvider
+        await context.read<AuthProvider>().updateUserProfile(
+              _nameController.text.trim(),
+              _emailController.text.trim(),
+              phone: _phoneController.text.trim(),
+            );
+            
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('প্রোফাইল আপডেট করা হয়েছে')),
           );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('প্রোফাইল আপডেট করা হয়েছে')),
-        );
-        Navigator.pop(context);
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('ত্রুটি ঘটেছে: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }
@@ -73,8 +88,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                   children: [
                     CircleAvatar(
                       radius: 60,
-                      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                      child: Icon(
+                      backgroundColor: AppColors.primary.withOpacity(0.1),
+                      child: const Icon(
                         Icons.person_rounded,
                         size: 80,
                         color: AppColors.primary,
@@ -123,6 +138,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                 controller: _phoneController,
                 icon: Icons.phone_outlined,
                 keyboardType: TextInputType.phone,
+                hintText: 'উদা: ০১৭XXXXXXXX',
               ),
               const SizedBox(height: 48),
 
@@ -155,6 +171,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     required IconData icon,
     TextInputType? keyboardType,
     String? Function(String?)? validator,
+    String? hintText,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,6 +192,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
           style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.w500),
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: AppColors.primary),
+            hintText: hintText,
             filled: true,
             fillColor: Colors.white,
             border: OutlineInputBorder(

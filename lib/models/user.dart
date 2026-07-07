@@ -16,10 +16,14 @@ class User extends HiveObject {
   @HiveField(3)
   final String password; // In a real app, this should be hashed.
 
+  @HiveField(4)
+  final String? phone;
+
   User({
     required this.id,
     required this.name,
     required this.email,
     required this.password,
+    this.phone,
   });
 }

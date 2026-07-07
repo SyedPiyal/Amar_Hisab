@@ -3,10 +3,12 @@ import 'package:hive/hive.dart';
 import '../../../models/debt.dart';
 import '../../../models/transaction.dart';
 import '../../../models/account.dart';
+import '../../../services/sync_service.dart';
 
 class DebtProvider with ChangeNotifier {
   static const String boxName = 'debts';
   List<Debt> _debts = [];
+  final SyncService _syncService = SyncService();
 
   List<Debt> get debts => _debts;
   List<Debt> get receivables => _debts.where((d) => d.type == 'Receivable').toList();
@@ -78,6 +80,13 @@ class DebtProvider with ChangeNotifier {
 
     _debts = box.values.toList()..sort((a, b) => b.date.compareTo(a.date));
     notifyListeners();
+
+    await _syncService.enqueueOperation(
+      boxName,
+      debt.id,
+      'CREATE',
+      _debtToMap(debt),
+    );
   }
 
   Future<void> addPayment(Debt debt, double paymentAmount, Account account, {DateTime? date}) async {
@@ -117,11 +126,42 @@ class DebtProvider with ChangeNotifier {
     await account.save();
 
     notifyListeners();
+
+    await _syncService.enqueueOperation(
+      boxName,
+      debt.id,
+      'UPDATE',
+      _debtToMap(debt),
+    );
   }
 
   Future<void> deleteDebt(Debt debt) async {
+    final debtId = debt.id;
     await debt.delete();
     _debts.remove(debt);
     notifyListeners();
+
+    await _syncService.enqueueOperation(
+      boxName,
+      debtId,
+      'DELETE',
+      null,
+    );
+  }
+
+  Map<String, dynamic> _debtToMap(Debt debt) {
+    return {
+      'id': debt.id,
+      'personName': debt.personName,
+      'amount': debt.amount,
+      'remainingAmount': debt.remainingAmount,
+      'type': debt.type,
+      'date': debt.date.toIso8601String(),
+      'dueDate': debt.dueDate?.toIso8601String(),
+      'note': debt.note,
+      'status': debt.status,
+      'accountId': debt.accountId,
+      'phoneNumber': debt.phoneNumber,
+    };
   }
 }
