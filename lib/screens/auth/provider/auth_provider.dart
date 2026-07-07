@@ -2,13 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../models/user.dart';
 import '../../../services/sync_service.dart';
 
 class AuthProvider with ChangeNotifier {
   static const String _usersBoxName = 'users';
-  static const String _sessionBoxName = 'session';
   static const String _currentUserKey = 'currentUserId';
+  static const String _isLoggedInKey = 'isLoggedIn';
 
   final auth.FirebaseAuth _firebaseAuth = auth.FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -21,16 +22,20 @@ class AuthProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
 
   Future<void> checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isLoggedIn = prefs.getBool(_isLoggedInKey) ?? false;
+    final currentUserId = prefs.getString(_currentUserKey);
+
     final firebaseUser = _firebaseAuth.currentUser;
+
     if (firebaseUser != null) {
       await _loadUserData(firebaseUser.uid);
-    } else {
-      final sessionBox = await Hive.openBox(_sessionBoxName);
-      final currentUserId = sessionBox.get(_currentUserKey);
-
-      if (currentUserId != null) {
-        final usersBox = await Hive.openBox<User>(_usersBoxName);
-        _currentUser = usersBox.get(currentUserId);
+    } else if (isLoggedIn && currentUserId != null) {
+      final usersBox = await Hive.openBox<User>(_usersBoxName);
+      _currentUser = usersBox.get(currentUserId);
+      if (_currentUser != null) {
+        // Initialize Sync Service for the persisted user
+        await SyncService().initialize(currentUserId);
       }
     }
     notifyListeners();
@@ -52,8 +57,7 @@ class AuthProvider with ChangeNotifier {
         final usersBox = await Hive.openBox<User>(_usersBoxName);
         await usersBox.put(uid, _currentUser!);
         
-        final sessionBox = await Hive.openBox(_sessionBoxName);
-        await sessionBox.put(_currentUserKey, uid);
+        await _setSession(_currentUser!);
         
         // Initialize Sync Service for the logged in user
         await SyncService().initialize(uid);
@@ -154,8 +158,9 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> logout() async {
     await _firebaseAuth.signOut();
-    final sessionBox = await Hive.openBox(_sessionBoxName);
-    await sessionBox.delete(_currentUserKey);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_isLoggedInKey, false);
+    await prefs.remove(_currentUserKey);
     _currentUser = null;
     notifyListeners();
   }
@@ -203,8 +208,9 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> _setSession(User user) async {
     _currentUser = user;
-    final sessionBox = await Hive.openBox(_sessionBoxName);
-    await sessionBox.put(_currentUserKey, user.id);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_isLoggedInKey, true);
+    await prefs.setString(_currentUserKey, user.id);
     notifyListeners();
   }
 }

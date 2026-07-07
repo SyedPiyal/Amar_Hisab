@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
+import '../settings/provider/settings_provider.dart';
 import 'login_screen.dart';
 
 class IntroScreen extends StatefulWidget {
@@ -36,7 +38,10 @@ class _IntroScreenState extends State<IntroScreen> {
   ];
 
   void _onDone() async {
-    // Navigate to Login/Setup
+    // Update isFirstLaunch status using SettingsProvider
+    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    await settingsProvider.updateSettings(isFirstLaunch: false);
+
     if (mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const LoginScreen()),
