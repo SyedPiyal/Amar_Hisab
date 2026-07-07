@@ -37,17 +37,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 Navigator.pop(context);
               },
             ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.print_outlined),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const PrinterSettingsScreen()),
-                  );
-                },
-                tooltip: 'প্রিন্টার সেটিংস',
-              ),
-            ],
           ),
           body: Consumer<BillingProvider>(
             builder: (context, billingState, child) {

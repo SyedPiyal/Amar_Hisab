@@ -231,24 +231,18 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Sing
               ),
             )
           else
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: provider.wifiDevices.length,
-              itemBuilder: (context, index) {
-                final ip = provider.wifiDevices[index];
-                return ListTile(
-                  leading: const Icon(Icons.print),
-                  title: Text(ip),
-                  trailing: ElevatedButton(
-                    onPressed: () {
-                      _ipController.text = ip;
-                      provider.connectWifiPrinter(ip);
-                    },
-                    child: Text('সংযুক্ত করুন', style: GoogleFonts.hindSiliguri()),
-                  ),
-                );
-              },
+            ...provider.wifiDevices.map(
+              (ip) => ListTile(
+                leading: const Icon(Icons.print),
+                title: Text(ip),
+                trailing: ElevatedButton(
+                  onPressed: () {
+                    _ipController.text = ip;
+                    provider.connectWifiPrinter(ip);
+                  },
+                  child: Text('সংযুক্ত করুন', style: GoogleFonts.hindSiliguri()),
+                ),
+              ),
             ),
           const Divider(height: 32),
           Text(

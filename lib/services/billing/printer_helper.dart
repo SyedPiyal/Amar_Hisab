@@ -2,6 +2,9 @@ import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 class EscPos {
   static const List<int> init = [0x1B, 0x40];
@@ -80,7 +83,7 @@ class PrinterHelper {
         _isBluetoothConnected = false;
       }
       if (_isWifiConnected) {
-        _socket?.destroy(); // Fixed: Removed await because destroy() returns void
+        _socket?.destroy();
         _socket = null;
         _isWifiConnected = false;
       }
@@ -113,77 +116,88 @@ class PrinterHelper {
     required double total,
     required String footer,
   }) async {
-    if (!isConnected) return;
+    final pdf = pw.Document();
 
-    List<int> bytes = [];
+    // Load Bangla fonts using PdfGoogleFonts from printing package
+    final font = await PdfGoogleFonts.hindSiliguriRegular();
+    final boldFont = await PdfGoogleFonts.hindSiliguriBold();
 
-    bytes += EscPos.init;
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.roll80,
+        margin: const pw.EdgeInsets.all(10),
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
+            children: [
+              pw.Text(shopName, style: pw.TextStyle(font: boldFont, fontSize: 16)),
+              if (address1.isNotEmpty) pw.Text(address1, style: pw.TextStyle(font: font, fontSize: 9)),
+              if (address2.isNotEmpty) pw.Text(address2, style: pw.TextStyle(font: font, fontSize: 9)),
+              pw.Text('Phone: $phone', style: pw.TextStyle(font: font, fontSize: 9)),
+              pw.SizedBox(height: 5),
+              pw.Text(
+                'Date: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
+                style: pw.TextStyle(font: font, fontSize: 9),
+              ),
+              pw.Divider(borderStyle: pw.BorderStyle.dashed),
+              pw.Text('RETAIL INVOICE', style: pw.TextStyle(font: boldFont, fontSize: 11)),
+              pw.Divider(borderStyle: pw.BorderStyle.dashed),
+              pw.Table(
+                columnWidths: {
+                  0: const pw.FixedColumnWidth(15),
+                  1: const pw.FlexColumnWidth(),
+                  2: const pw.FixedColumnWidth(35),
+                  3: const pw.FixedColumnWidth(25),
+                  4: const pw.FixedColumnWidth(35),
+                },
+                children: [
+                  pw.TableRow(
+                    children: [
+                      pw.Text('No', style: pw.TextStyle(font: boldFont, fontSize: 8)),
+                      pw.Text('Description', style: pw.TextStyle(font: boldFont, fontSize: 8)),
+                      pw.Text('Price', style: pw.TextStyle(font: boldFont, fontSize: 8), textAlign: pw.TextAlign.right),
+                      pw.Text('Qty', style: pw.TextStyle(font: boldFont, fontSize: 8), textAlign: pw.TextAlign.right),
+                      pw.Text('Total', style: pw.TextStyle(font: boldFont, fontSize: 8), textAlign: pw.TextAlign.right),
+                    ],
+                  ),
+                  pw.TableRow(children: [pw.SizedBox(height: 2), pw.SizedBox(), pw.SizedBox(), pw.SizedBox(), pw.SizedBox()]),
+                  ...items.asMap().entries.map((entry) {
+                    final index = entry.key + 1;
+                    final item = entry.value;
+                    return pw.TableRow(
+                      children: [
+                        pw.Text('$index', style: pw.TextStyle(font: font, fontSize: 8)),
+                        pw.Text(item['name'], style: pw.TextStyle(font: font, fontSize: 8)),
+                        pw.Text(item['price'].toStringAsFixed(2), style: pw.TextStyle(font: font, fontSize: 8), textAlign: pw.TextAlign.right),
+                        pw.Text(item['qty'].toString(), style: pw.TextStyle(font: font, fontSize: 8), textAlign: pw.TextAlign.right),
+                        pw.Text(item['total'].toStringAsFixed(2), style: pw.TextStyle(font: font, fontSize: 8), textAlign: pw.TextAlign.right),
+                      ],
+                    );
+                  }),
+                ],
+              ),
+              pw.Divider(borderStyle: pw.BorderStyle.dashed),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('Total:', style: pw.TextStyle(font: boldFont, fontSize: 11)),
+                  pw.Text('৳${total.toStringAsFixed(2)}', style: pw.TextStyle(font: boldFont, fontSize: 11)),
+                ],
+              ),
+              pw.Divider(borderStyle: pw.BorderStyle.dashed),
+              pw.SizedBox(height: 10),
+              pw.Text(footer, style: pw.TextStyle(font: font, fontSize: 9), textAlign: pw.TextAlign.center),
+              pw.SizedBox(height: 20),
+            ],
+          );
+        },
+      ),
+    );
 
-    bytes += EscPos.alignCenter;
-    bytes += EscPos.boldOn;
-    bytes += EscPos.textLarge;
-    bytes += _textToBytes(shopName);
-    bytes += EscPos.lineFeed;
-
-    bytes += EscPos.textNormal;
-    bytes += EscPos.boldOff;
-    if (address1.isNotEmpty) {
-      bytes += _textToBytes(address1);
-      bytes += EscPos.lineFeed;
-    }
-    if (address2.isNotEmpty) {
-      bytes += _textToBytes(address2);
-      bytes += EscPos.lineFeed;
-    }
-    bytes += _textToBytes(phone);
-    bytes += EscPos.lineFeed;
-
-    String formattedDate =
-        DateFormat('dd-MM-yyyy hh:mm a').format(DateTime.now());
-    bytes += _textToBytes(formattedDate);
-    bytes += EscPos.lineFeed;
-
-    bytes += _textToBytes('--------------------------------');
-    bytes += EscPos.lineFeed;
-
-    bytes += EscPos.alignLeft;
-    bytes += _textToBytes('Item            Price   Total');
-    bytes += EscPos.lineFeed;
-    bytes += _textToBytes('--------------------------------');
-    bytes += EscPos.lineFeed;
-
-    for (var item in items) {
-      String name = item['name'].toString();
-      String qty = item['qty'].toString();
-      String price = item['price'].toString();
-      String totalItem = item['total'].toString();
-
-      String prefix = '${qty}x $name';
-      if (prefix.length > 16) prefix = prefix.substring(0, 16);
-
-      String line = prefix.padRight(16) + price.padRight(8) + totalItem;
-      bytes += _textToBytes(line);
-      bytes += EscPos.lineFeed;
-    }
-
-    bytes += _textToBytes('--------------------------------');
-    bytes += EscPos.lineFeed;
-
-    bytes += EscPos.alignRight;
-    bytes += EscPos.boldOn;
-    bytes += _textToBytes('TOTAL: $total');
-    bytes += EscPos.lineFeed;
-    bytes += EscPos.boldOff;
-    bytes += EscPos.lineFeed;
-
-    bytes += EscPos.alignCenter;
-    bytes += _textToBytes(footer);
-    bytes += EscPos.lineFeed;
-    bytes += EscPos.lineFeed;
-    bytes += EscPos.lineFeed;
-    bytes += EscPos.lineFeed;
-
-    await _writeBytes(bytes);
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+      name: 'Receipt_${DateTime.now().millisecondsSinceEpoch}.pdf',
+    );
   }
 
   List<int> _textToBytes(String text) {

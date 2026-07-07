@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import '../../models/billing/cart_item.dart';
 import '../../models/billing/product.dart';
 import '../../services/billing/printer_helper.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 
 class BillingProvider with ChangeNotifier {
   List<CartItem> _cartItems = [];
@@ -78,43 +77,6 @@ class BillingProvider with ChangeNotifier {
     required String phone,
     required String footer,
   }) async {
-    final printerHelper = PrinterHelper();
-
-    // Auto-connect if not connected
-    if (!printerHelper.isConnected) {
-      final settings = Hive.box('settings');
-      final type = settings.get('printer_type'); // 'bluetooth' or 'wifi'
-      
-      bool connected = false;
-      
-      if (type == 'bluetooth') {
-        final savedMac = settings.get('printer_mac');
-        if (savedMac != null) {
-          _isPrinting = true;
-          notifyListeners();
-          connected = await printerHelper.connectBluetooth(savedMac);
-        }
-      } else if (type == 'wifi') {
-        final savedIp = settings.get('printer_ip');
-        if (savedIp != null) {
-          _isPrinting = true;
-          notifyListeners();
-          connected = await printerHelper.connectWifi(savedIp);
-        }
-      }
-
-      if (!connected && type != null) {
-        _isPrinting = false;
-        _error = 'প্রিন্টারের সাথে সংযোগ করা সম্ভব হয়নি। সংযোগ পরীক্ষা করুন।';
-        notifyListeners();
-        return;
-      } else if (type == null) {
-        _error = 'প্রিন্টার সংযুক্ত নেই। অনুগ্রহ করে সেটিংস থেকে প্রিন্টার যুক্ত করুন।';
-        notifyListeners();
-        return;
-      }
-    }
-
     _isPrinting = true;
     _printSuccess = false;
     _error = null;
@@ -128,7 +90,7 @@ class BillingProvider with ChangeNotifier {
         'total': item.total,
       }).toList();
 
-      await printerHelper.printReceipt(
+      await PrinterHelper().printReceipt(
         shopName: shopName,
         address1: address1,
         address2: address2,
