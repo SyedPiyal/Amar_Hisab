@@ -4,7 +4,38 @@ import 'package:flutter/foundation.dart';
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // users/{uid}/{collection}/{documentId}
+  // Global Collection Methods (No UID required)
+  
+  Future<void> saveGlobalRecord({
+    required String collection,
+    required String documentId,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      data['updatedAt'] = FieldValue.serverTimestamp();
+      await _firestore
+          .collection(collection)
+          .doc(documentId)
+          .set(data, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('Firestore global save error: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchGlobalCollection({
+    required String collection,
+  }) async {
+    try {
+      final querySnapshot = await _firestore.collection(collection).get();
+      return querySnapshot.docs.map((doc) => doc.data()).toList();
+    } catch (e) {
+      debugPrint('Firestore global fetch error: $e');
+      return [];
+    }
+  }
+
+  // User-specific Methods (Existing)
 
   Future<void> saveRecord({
     required String uid,
@@ -13,13 +44,11 @@ class FirestoreService {
     required Map<dynamic, dynamic> data,
   }) async {
     try {
-      // Ensure all keys are strings for Firestore
       final Map<String, dynamic> firestoreData = {};
       data.forEach((key, value) {
         firestoreData[key.toString()] = value;
       });
 
-      // Add a server timestamp for sync resolution if needed later
       firestoreData['updatedAt'] = FieldValue.serverTimestamp();
 
       await _firestore

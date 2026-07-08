@@ -1,30 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/billing/product_provider.dart';
-import '../../../models/billing/product.dart';
+import 'package:uuid/uuid.dart';
+import '../../providers/billing/product_provider.dart';
+import '../../models/billing/product.dart';
 
-class EditProductPage extends StatefulWidget {
-  final Product product;
-  
-  const EditProductPage({super.key, required this.product});
+class AddProductPage extends StatefulWidget {
+  final String? initialBarcode;
+  const AddProductPage({super.key, this.initialBarcode});
 
   @override
-  State<EditProductPage> createState() => _EditProductPageState();
+  State<AddProductPage> createState() => _AddProductPageState();
 }
 
-class _EditProductPageState extends State<EditProductPage> {
+class _AddProductPageState extends State<AddProductPage> {
   final _formKey = GlobalKey<FormState>();
-  late String _name;
+  String _name = '';
   late String _barcode;
-  late double _price;
+  double _price = 0.0;
 
   @override
   void initState() {
     super.initState();
-    _name = widget.product.name;
-    _barcode = widget.product.barcode;
-    _price = widget.product.price;
+    _barcode = widget.initialBarcode ?? '';
   }
 
   void _submit() {
@@ -32,7 +30,7 @@ class _EditProductPageState extends State<EditProductPage> {
       _formKey.currentState!.save();
 
       final provider = context.read<ProductProvider>();
-      final existingProduct = provider.products.where((p) => p.barcode == _barcode && p.id != widget.product.id).firstOrNull;
+      final existingProduct = provider.products.where((p) => p.barcode == _barcode).firstOrNull;
 
       if (existingProduct != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -44,14 +42,14 @@ class _EditProductPageState extends State<EditProductPage> {
         return;
       }
 
-      final updatedProduct = Product(
-        id: widget.product.id,
+      final product = Product(
+        id: const Uuid().v4(),
         name: _name,
         barcode: _barcode,
         price: _price,
       );
 
-      provider.updateProduct(updatedProduct).then((_) {
+      provider.addProduct(product).then((_) {
         Navigator.pop(context);
       });
     }
@@ -61,7 +59,7 @@ class _EditProductPageState extends State<EditProductPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text('পণ্য সংশোধন করুন', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
+          title: Text('পণ্য যোগ করুন', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
         ),
         body: SafeArea(
           child: SingleChildScrollView(
@@ -73,22 +71,28 @@ class _EditProductPageState extends State<EditProductPage> {
                 children: [
                   Text('বারকোড', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  TextFormField(
-                    initialValue: _barcode,
-                    style: GoogleFonts.hindSiliguri(),
-                    decoration: InputDecoration(
-                      hintText: 'বারকোড দিন',
-                      hintStyle: GoogleFonts.hindSiliguri(),
-                      border: const OutlineInputBorder(),
-                    ),
-                    validator: (val) => val == null || val.isEmpty ? 'প্রয়োজনীয়' : null,
-                    onSaved: (value) => _barcode = value!,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          key: ValueKey(_barcode),
+                          initialValue: _barcode,
+                          style: GoogleFonts.hindSiliguri(),
+                          decoration: InputDecoration(
+                            hintText: 'স্ক্যান করুন বা বারকোড দিন',
+                            hintStyle: GoogleFonts.hindSiliguri(),
+                            border: const OutlineInputBorder(),
+                          ),
+                          validator: (val) => val == null || val.isEmpty ? 'প্রয়োজনীয়' : null,
+                          onSaved: (value) => _barcode = value!,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 24),
                   Text('পণ্যের নাম', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   TextFormField(
-                    initialValue: _name,
                     style: GoogleFonts.hindSiliguri(),
                     decoration: InputDecoration(
                       hintText: 'যেমন: বাসমতি চাল',
@@ -103,7 +107,6 @@ class _EditProductPageState extends State<EditProductPage> {
                   Text('মূল্য', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   TextFormField(
-                    initialValue: _price.toString(),
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(
                       hintText: '০.০০',
@@ -122,8 +125,8 @@ class _EditProductPageState extends State<EditProductPage> {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: _submit,
-                      icon: const Icon(Icons.save),
-                      label: Text('পরিবর্তন সংরক্ষণ করুন', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
+                      icon: const Icon(Icons.add_circle),
+                      label: Text('পণ্য যোগ করুন', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),

@@ -16,7 +16,7 @@ import 'category_management_screen.dart';
 import '../help/user_manual_screen.dart';
 import '../auth/provider/auth_provider.dart';
 import '../inventory/inventory_list_screen.dart';
-import '../other/billing/billing_dashboard_screen.dart';
+import '../billing/billing_dashboard_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});

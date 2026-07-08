@@ -25,7 +25,7 @@ class _ProductListPageState extends State<ProductListPage> {
         _searchQuery = _searchController.text.toLowerCase();
       });
     });
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProductProvider>().loadProducts();
     });
@@ -43,7 +43,10 @@ class _ProductListPageState extends State<ProductListPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('পণ্য ব্যবস্থাপনা', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
+        title: Text(
+          'পণ্য ব্যবস্থাপনা',
+          style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold),
+        ),
       ),
       body: Column(
         children: [
@@ -84,25 +87,48 @@ class _ProductListPageState extends State<ProductListPage> {
 
                 if (provider.products.isEmpty) {
                   if (provider.error != null) {
-                    return Center(child: Text('ত্রুটি: ${provider.error}', style: GoogleFonts.hindSiliguri()));
+                    return Center(
+                      child: Text(
+                        'ত্রুটি: ${provider.error}',
+                        style: GoogleFonts.hindSiliguri(),
+                      ),
+                    );
                   }
-                  return Center(child: Text('কোনো পণ্য পাওয়া যায়নি। যোগ করুন!', style: GoogleFonts.hindSiliguri()));
+                  return Center(
+                    child: Text(
+                      'কোনো পণ্য পাওয়া যায়নি। যোগ করুন!',
+                      style: GoogleFonts.hindSiliguri(),
+                    ),
+                  );
                 }
 
                 final filteredProducts = provider.products
-                    .where((product) =>
-                        product.name.toLowerCase().contains(_searchQuery) ||
-                        product.barcode.toLowerCase().contains(_searchQuery))
+                    .where(
+                      (product) =>
+                          product.name.toLowerCase().contains(_searchQuery) ||
+                          product.barcode.toLowerCase().contains(_searchQuery),
+                    )
                     .toList();
 
                 if (filteredProducts.isEmpty) {
-                  return Center(child: Text('আপনার অনুসন্ধানের সাথে কোনো পণ্য মিলছে না।', style: GoogleFonts.hindSiliguri()));
+                  return Center(
+                    child: Text(
+                      'আপনার অনুসন্ধানের সাথে কোনো পণ্য মিলছে না।',
+                      style: GoogleFonts.hindSiliguri(),
+                    ),
+                  );
                 }
 
                 return ListView.separated(
-                  padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 100),
+                  padding: const EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    top: 8,
+                    bottom: 100,
+                  ),
                   itemCount: filteredProducts.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 12),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final product = filteredProducts[index];
                     return Container(
@@ -111,7 +137,11 @@ class _ProductListPageState extends State<ProductListPage> {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: borderColor),
                         boxShadow: const [
-                          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
                         ],
                       ),
                       padding: const EdgeInsets.all(16),
@@ -124,12 +154,18 @@ class _ProductListPageState extends State<ProductListPage> {
                               children: [
                                 Text(
                                   product.name,
-                                  style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.w600, fontSize: 16),
+                                  style: GoogleFonts.hindSiliguri(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                  ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   '৳${product.price.toStringAsFixed(2)}',
-                                  style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.w500, color: Colors.grey[600]),
+                                  style: GoogleFonts.hindSiliguri(
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.grey[600],
+                                  ),
                                 ),
                               ],
                             ),
@@ -138,19 +174,32 @@ class _ProductListPageState extends State<ProductListPage> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
-                                icon: Icon(Icons.edit_rounded, color: Theme.of(context).primaryColor, size: 20),
+                                icon: Icon(
+                                  Icons.edit_rounded,
+                                  color: Theme.of(context).primaryColor,
+                                  size: 20,
+                                ),
                                 onPressed: () {
-                                  Navigator.push(context, MaterialPageRoute(
-                                    builder: (context) => EditProductPage(product: product)
-                                  ));
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          EditProductPage(product: product),
+                                    ),
+                                  );
                                 },
                               ),
                               IconButton(
-                                icon: const Icon(Icons.delete_outline_rounded, color: Colors.red, size: 20),
-                                onPressed: () => _confirmDelete(context, product),
+                                icon: const Icon(
+                                  Icons.delete_outline_rounded,
+                                  color: Colors.red,
+                                  size: 20,
+                                ),
+                                onPressed: () =>
+                                    _confirmDelete(context, product),
                               ),
                             ],
-                          )
+                          ),
                         ],
                       ),
                     );
@@ -162,9 +211,10 @@ class _ProductListPageState extends State<ProductListPage> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.push(context, MaterialPageRoute(
-          builder: (context) => const AddProductPage()
-        )),
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AddProductPage()),
+        ),
         child: const Icon(Icons.add, size: 32),
       ),
     );
@@ -175,8 +225,14 @@ class _ProductListPageState extends State<ProductListPage> {
       context: context,
       builder: (innerContext) {
         return AlertDialog(
-          title: Text('পণ্য মুছে ফেলুন', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
-          content: Text('আপনি কি নিশ্চিত যে আপনি ${product.name} মুছে ফেলতে চান?', style: GoogleFonts.hindSiliguri()),
+          title: Text(
+            'পণ্য মুছে ফেলুন',
+            style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            'আপনি কি নিশ্চিত যে আপনি ${product.name} মুছে ফেলতে চান?',
+            style: GoogleFonts.hindSiliguri(),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(innerContext),
@@ -187,7 +243,10 @@ class _ProductListPageState extends State<ProductListPage> {
                 context.read<ProductProvider>().deleteProduct(product.id);
                 Navigator.pop(innerContext);
               },
-              child: Text('মুছে ফেলুন', style: GoogleFonts.hindSiliguri(color: Colors.red)),
+              child: Text(
+                'মুছে ফেলুন',
+                style: GoogleFonts.hindSiliguri(color: Colors.red),
+              ),
             ),
           ],
         );

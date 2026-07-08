@@ -7,8 +7,8 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../providers/billing/billing_provider.dart';
 import '../../../providers/billing/product_provider.dart';
 import '../../../models/billing/cart_item.dart';
-import 'checkout_page.dart';
 import 'add_product_page.dart';
+import 'checkout_page.dart';
 
 class BillingPage extends StatefulWidget {
   const BillingPage({super.key});
@@ -69,14 +69,19 @@ class _BillingPageState extends State<BillingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("বিলিং", style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold))),
+      appBar: AppBar(
+        title: Text(
+          "বিলিং",
+          style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold),
+        ),
+      ),
       body: Consumer<BillingProvider>(
         builder: (context, provider, child) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (provider.error != null) {
               final errorMsg = provider.error!;
               provider.clearError();
-              
+
               if (errorMsg.startsWith('Product not found:')) {
                 print("working fine");
                 final barcode = errorMsg.split(':')[1].trim();
@@ -124,20 +129,26 @@ class _BillingPageState extends State<BillingPage> {
                     ? null
                     : () async {
                         _scannerController.stop();
-                        await Navigator.push(context, MaterialPageRoute(
-                          builder: (context) => const CheckoutPage()
-                        ));
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const CheckoutPage(),
+                          ),
+                        );
                         if (_isCameraOn && mounted) _scannerController.start();
                       },
                 icon: const Icon(Icons.payment),
-                label: Text('অর্ডার রিভিউ করুন', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
+                label: Text(
+                  'অর্ডার রিভিউ করুন',
+                  style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold),
+                ),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
               ),
             ),
           );
-        }
+        },
       ),
     );
   }
@@ -146,19 +157,31 @@ class _BillingPageState extends State<BillingPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('পণ্য পাওয়া যায়নি', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold)),
-        content: Text('এই বারকোডের ($barcode) কোন পণ্য পাওয়া যায়নি। আপনি কি নতুন পণ্য হিসেবে এটি যোগ করতে চান?', style: GoogleFonts.hindSiliguri()),
+        title: Text(
+          'পণ্য পাওয়া যায়নি',
+          style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'এই বারকোডের ($barcode) কোন পণ্য পাওয়া যায়নি। আপনি কি নতুন পণ্য হিসেবে এটি যোগ করতে চান?',
+          style: GoogleFonts.hindSiliguri(),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('না', style: GoogleFonts.hindSiliguri(color: Colors.grey)),
+            child: Text(
+              'না',
+              style: GoogleFonts.hindSiliguri(color: Colors.grey),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.push(context, MaterialPageRoute(
-                builder: (context) => AddProductPage(initialBarcode: barcode)
-              ));
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AddProductPage(initialBarcode: barcode),
+                ),
+              );
             },
             child: Text('হ্যাঁ, যোগ করুন', style: GoogleFonts.hindSiliguri()),
           ),
@@ -173,10 +196,7 @@ class _BillingPageState extends State<BillingPage> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          MobileScanner(
-            controller: _scannerController,
-            onDetect: _onDetect,
-          ),
+          MobileScanner(controller: _scannerController, onDetect: _onDetect),
           if (!_isCameraOn) _buildCameraOffState(),
 
           Positioned(
@@ -186,7 +206,9 @@ class _BillingPageState extends State<BillingPage> {
               children: [
                 if (_isCameraOn)
                   _buildOverlayButton(
-                    icon: _isFlashOn ? Icons.flashlight_off : Icons.flashlight_on,
+                    icon: _isFlashOn
+                        ? Icons.flashlight_off
+                        : Icons.flashlight_on,
                     onPressed: () {
                       setState(() => _isFlashOn = !_isFlashOn);
                       _scannerController.toggleTorch();
@@ -248,12 +270,20 @@ class _BillingPageState extends State<BillingPage> {
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
-            child: const Icon(Icons.videocam_off, color: Colors.white, size: 32),
+            child: const Icon(
+              Icons.videocam_off,
+              color: Colors.white,
+              size: 32,
+            ),
           ),
           const SizedBox(height: 16),
           Text(
             'ক্যামেরা বন্ধ আছে',
-            style: GoogleFonts.hindSiliguri(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+            style: GoogleFonts.hindSiliguri(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
@@ -262,18 +292,24 @@ class _BillingPageState extends State<BillingPage> {
               foregroundColor: Colors.white,
             ),
             icon: const Icon(Icons.videocam),
-            label: Text('ক্যামেরা চালু করুন', style: GoogleFonts.hindSiliguri()),
+            label: Text(
+              'ক্যামেরা চালু করুন',
+              style: GoogleFonts.hindSiliguri(),
+            ),
             onPressed: () {
               setState(() => _isCameraOn = true);
               _scannerController.start();
             },
-          )
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildOverlayButton({required IconData icon, required VoidCallback onPressed}) {
+  Widget _buildOverlayButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
     return Container(
       width: 44,
       height: 44,
@@ -297,14 +333,26 @@ class _BillingPageState extends State<BillingPage> {
         height: 32,
         decoration: BoxDecoration(
           border: Border(
-            top: (alignment == Alignment.topLeft || alignment == Alignment.topRight)
-                ? const BorderSide(color: Colors.greenAccent, width: 4) : BorderSide.none,
-            bottom: (alignment == Alignment.bottomLeft || alignment == Alignment.bottomRight)
-                ? const BorderSide(color: Colors.greenAccent, width: 4) : BorderSide.none,
-            left: (alignment == Alignment.topLeft || alignment == Alignment.bottomLeft)
-                ? const BorderSide(color: Colors.greenAccent, width: 4) : BorderSide.none,
-            right: (alignment == Alignment.topRight || alignment == Alignment.bottomRight)
-                ? const BorderSide(color: Colors.greenAccent, width: 4) : BorderSide.none,
+            top:
+                (alignment == Alignment.topLeft ||
+                    alignment == Alignment.topRight)
+                ? const BorderSide(color: Colors.greenAccent, width: 4)
+                : BorderSide.none,
+            bottom:
+                (alignment == Alignment.bottomLeft ||
+                    alignment == Alignment.bottomRight)
+                ? const BorderSide(color: Colors.greenAccent, width: 4)
+                : BorderSide.none,
+            left:
+                (alignment == Alignment.topLeft ||
+                    alignment == Alignment.bottomLeft)
+                ? const BorderSide(color: Colors.greenAccent, width: 4)
+                : BorderSide.none,
+            right:
+                (alignment == Alignment.topRight ||
+                    alignment == Alignment.bottomRight)
+                ? const BorderSide(color: Colors.greenAccent, width: 4)
+                : BorderSide.none,
           ),
         ),
       ),
@@ -316,7 +364,13 @@ class _BillingPageState extends State<BillingPage> {
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 15, offset: Offset(0, -5))],
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 15,
+            offset: Offset(0, -5),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -337,16 +391,40 @@ class _BillingPageState extends State<BillingPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('স্ক্যান করা আইটেম', style: GoogleFonts.hindSiliguri(fontSize: 18, fontWeight: FontWeight.w600)),
-                    Text('মোট ${provider.cartItems.fold<int>(0, (sum, i) => sum + i.quantity)} টি আইটেম', style: GoogleFonts.hindSiliguri(fontSize: 12, color: Colors.grey)),
+                    Text(
+                      'স্ক্যান করা আইটেম',
+                      style: GoogleFonts.hindSiliguri(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      'মোট ${provider.cartItems.fold<int>(0, (sum, i) => sum + i.quantity)} টি আইটেম',
+                      style: GoogleFonts.hindSiliguri(
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                    ),
                   ],
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('মোট টাকা', style: GoogleFonts.hindSiliguri(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-                    Text('৳${provider.totalAmount.toStringAsFixed(2)}',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Theme.of(context).primaryColor),
+                    Text(
+                      'মোট টাকা',
+                      style: GoogleFonts.hindSiliguri(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    Text(
+                      '৳${provider.totalAmount.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: Theme.of(context).primaryColor,
+                      ),
                     ),
                   ],
                 ),
@@ -358,9 +436,15 @@ class _BillingPageState extends State<BillingPage> {
             child: provider.cartItems.isEmpty
                 ? _buildEmptyCart()
                 : ListView.separated(
-                    padding: const EdgeInsets.only(left: 15, right: 15, top: 16, bottom: 100),
+                    padding: const EdgeInsets.only(
+                      left: 15,
+                      right: 15,
+                      top: 16,
+                      bottom: 100,
+                    ),
                     itemCount: provider.cartItems.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 12),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final item = provider.cartItems[index];
                       return _buildCartItemCard(context, item, provider);
@@ -379,13 +463,23 @@ class _BillingPageState extends State<BillingPage> {
         children: [
           Icon(Icons.shopping_basket, size: 40, color: Colors.grey[300]),
           const SizedBox(height: 16),
-          Text('তালিকা খালি', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold, fontSize: 18)),
+          Text(
+            'তালিকা খালি',
+            style: GoogleFonts.hindSiliguri(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildCartItemCard(BuildContext context, CartItem item, BillingProvider provider) {
+  Widget _buildCartItemCard(
+    BuildContext context,
+    CartItem item,
+    BillingProvider provider,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -400,20 +494,42 @@ class _BillingPageState extends State<BillingPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.product.name, style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.w600, fontSize: 14)),
-                Text('৳${item.product.price.toStringAsFixed(2)}', style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.grey[600])),
+                Text(
+                  item.product.name,
+                  style: GoogleFonts.hindSiliguri(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  '৳${item.product.price.toStringAsFixed(2)}',
+                  style: GoogleFonts.hindSiliguri(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
               ],
             ),
           ),
           Row(
             children: [
-              IconButton(icon: const Icon(Icons.remove), onPressed: () {
-                provider.updateQuantity(item.product.id, item.quantity - 1);
-              }),
-              Text('${item.quantity}', style: const TextStyle(fontWeight: FontWeight.bold)),
-              IconButton(icon: const Icon(Icons.add), onPressed: () {
-                provider.updateQuantity(item.product.id, item.quantity + 1);
-              }),
+              IconButton(
+                icon: const Icon(Icons.remove),
+                onPressed: () {
+                  provider.updateQuantity(item.product.id, item.quantity - 1);
+                },
+              ),
+              Text(
+                '${item.quantity}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: () {
+                  provider.updateQuantity(item.product.id, item.quantity + 1);
+                },
+              ),
             ],
           ),
         ],

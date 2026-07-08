@@ -1,10 +1,9 @@
+import 'package:amar_hisab/screens/billing/product_list_page.dart';
+import 'package:amar_hisab/screens/billing/shop_details_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import '../../theme/app_colors.dart';
 import 'billing_page.dart';
-import 'product_list_page.dart';
-import 'shop_details_page.dart';
-import '../../../theme/app_colors.dart';
 
 class BillingDashboardScreen extends StatelessWidget {
   const BillingDashboardScreen({super.key});

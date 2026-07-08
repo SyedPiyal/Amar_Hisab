@@ -33,6 +33,8 @@ class DatabaseService {
     await Hive.openBox<Product>('products');
     await Hive.openBox<Shop>('shop');
     await Hive.openBox('settings');
+    
+    // Open sync queue box at startup to ensure it's always ready
+    await Hive.openBox<SyncOperation>('sync_queue');
   }
 }
-
