@@ -4,8 +4,7 @@ import '../../../models/savings_goal.dart';
 import '../../../services/sync_service.dart';
 
 class SavingsGoalProvider with ChangeNotifier {
-  static const String boxName = 'savings_goals';
-  late Box<SavingsGoal> _goalBox;
+  static const String _baseBoxName = 'savings_goals';
   List<SavingsGoal> _goals = [];
   final SyncService _syncService = SyncService();
 
@@ -13,24 +12,34 @@ class SavingsGoalProvider with ChangeNotifier {
 
   SavingsGoalProvider() {
     _init();
+    _syncService.onUidChanged.listen((uid) {
+      _init();
+    });
+  }
+
+  String get _scopedBoxName {
+    final uid = _syncService.currentUid;
+    return uid != null ? '${_baseBoxName}_$uid' : '${_baseBoxName}_shared';
   }
 
   Future<void> _init() async {
-    _goalBox = await Hive.openBox<SavingsGoal>(boxName);
-    _loadGoals();
-  }
-
-  void _loadGoals() {
-    _goals = _goalBox.values.toList();
-    notifyListeners();
+    try {
+      final box = await Hive.openBox<SavingsGoal>(_scopedBoxName);
+      _goals = box.values.toList();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error initializing savings goals: $e');
+    }
   }
 
   Future<void> addGoal(SavingsGoal goal) async {
-    await _goalBox.put(goal.id, goal);
-    _loadGoals();
+    final box = await Hive.openBox<SavingsGoal>(_scopedBoxName);
+    await box.put(goal.id, goal);
+    _goals = box.values.toList();
+    notifyListeners();
 
     await _syncService.enqueueOperation(
-      boxName,
+      _baseBoxName,
       goal.id,
       'CREATE',
       _goalToMap(goal),
@@ -39,10 +48,12 @@ class SavingsGoalProvider with ChangeNotifier {
 
   Future<void> updateGoal(SavingsGoal goal) async {
     await goal.save();
-    _loadGoals();
+    final box = await Hive.openBox<SavingsGoal>(_scopedBoxName);
+    _goals = box.values.toList();
+    notifyListeners();
 
     await _syncService.enqueueOperation(
-      boxName,
+      _baseBoxName,
       goal.id,
       'UPDATE',
       _goalToMap(goal),
@@ -52,10 +63,12 @@ class SavingsGoalProvider with ChangeNotifier {
   Future<void> deleteGoal(SavingsGoal goal) async {
     final goalId = goal.id;
     await goal.delete();
-    _loadGoals();
+    final box = await Hive.openBox<SavingsGoal>(_scopedBoxName);
+    _goals = box.values.toList();
+    notifyListeners();
 
     await _syncService.enqueueOperation(
-      boxName,
+      _baseBoxName,
       goalId,
       'DELETE',
       null,
@@ -65,10 +78,12 @@ class SavingsGoalProvider with ChangeNotifier {
   Future<void> addAmount(SavingsGoal goal, double amount) async {
     goal.currentAmount += amount;
     await goal.save();
-    _loadGoals();
+    final box = await Hive.openBox<SavingsGoal>(_scopedBoxName);
+    _goals = box.values.toList();
+    notifyListeners();
 
     await _syncService.enqueueOperation(
-      boxName,
+      _baseBoxName,
       goal.id,
       'UPDATE',
       _goalToMap(goal),

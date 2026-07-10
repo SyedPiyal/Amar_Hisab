@@ -6,9 +6,21 @@ import '../../../models/account.dart';
 import '../../../services/sync_service.dart';
 
 class DebtProvider with ChangeNotifier {
-  static const String boxName = 'debts';
+  static const String _baseBoxName = 'debts';
   List<Debt> _debts = [];
   final SyncService _syncService = SyncService();
+
+  DebtProvider() {
+    loadDebts();
+    _syncService.onUidChanged.listen((uid) {
+      loadDebts();
+    });
+  }
+
+  String get _scopedBoxName {
+    final uid = _syncService.currentUid;
+    return uid != null ? '${_baseBoxName}_$uid' : '${_baseBoxName}_shared';
+  }
 
   List<Debt> get debts => _debts;
   List<Debt> get receivables => _debts.where((d) => d.type == 'Receivable').toList();
@@ -18,9 +30,13 @@ class DebtProvider with ChangeNotifier {
   double get totalPayable => payables.fold(0, (sum, d) => sum + d.remainingAmount);
 
   Future<void> loadDebts() async {
-    final box = await Hive.openBox<Debt>(boxName);
-    _debts = box.values.toList()..sort((a, b) => b.date.compareTo(a.date));
-    notifyListeners();
+    try {
+      final box = await Hive.openBox<Debt>(_scopedBoxName);
+      _debts = box.values.toList()..sort((a, b) => b.date.compareTo(a.date));
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading debts: $e');
+    }
   }
 
   Future<void> addDebt({
@@ -33,7 +49,7 @@ class DebtProvider with ChangeNotifier {
     Account? account,
     String? phoneNumber,
   }) async {
-    final box = await Hive.openBox<Debt>(boxName);
+    final box = await Hive.openBox<Debt>(_scopedBoxName);
     final debtId = DateTime.now().millisecondsSinceEpoch.toString();
     final now = date ?? DateTime.now();
 
@@ -52,11 +68,8 @@ class DebtProvider with ChangeNotifier {
 
     await box.put(debtId, debt);
 
-    // If account is provided, create a transaction and update balance
     if (account != null) {
-      final txBox = await Hive.openBox<Transaction>('transactions');
       final txType = type == 'Receivable' ? 'Expense' : 'Income';
-      
       final transaction = Transaction(
         id: (DateTime.now().millisecondsSinceEpoch + 1).toString(),
         title: '${type == 'Receivable' ? 'ধারে প্রদান' : 'ধার গ্রহণ'}: $personName',
@@ -68,6 +81,11 @@ class DebtProvider with ChangeNotifier {
         debtId: debtId,
       );
 
+      // Note: TransactionProvider handles its own scoping, so we use its add method if possible, 
+      // but here we manually add to maintain the current logic while ensuring sync.
+      final uid = _syncService.currentUid;
+      final txBoxName = uid != null ? 'transactions_$uid' : 'transactions_shared';
+      final txBox = await Hive.openBox<Transaction>(txBoxName);
       await txBox.add(transaction);
 
       if (txType == 'Income') {
@@ -76,23 +94,19 @@ class DebtProvider with ChangeNotifier {
         account.balance -= amount;
       }
       await account.save();
+      
+      await _syncService.enqueueOperation('transactions', transaction.id, 'CREATE', _transactionToMap(transaction));
     }
 
     _debts = box.values.toList()..sort((a, b) => b.date.compareTo(a.date));
     notifyListeners();
 
-    await _syncService.enqueueOperation(
-      boxName,
-      debt.id,
-      'CREATE',
-      _debtToMap(debt),
-    );
+    await _syncService.enqueueOperation(_baseBoxName, debt.id, 'CREATE', _debtToMap(debt));
   }
 
   Future<void> addPayment(Debt debt, double paymentAmount, Account account, {DateTime? date}) async {
     final now = date ?? DateTime.now();
     
-    // Update debt
     debt.remainingAmount -= paymentAmount;
     if (debt.remainingAmount <= 0) {
       debt.remainingAmount = 0;
@@ -100,10 +114,7 @@ class DebtProvider with ChangeNotifier {
     }
     await debt.save();
 
-    // Create transaction
-    final txBox = await Hive.openBox<Transaction>('transactions');
     final txType = debt.type == 'Receivable' ? 'Income' : 'Expense';
-    
     final transaction = Transaction(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: 'কিস্তি পরিশোধ: ${debt.personName}',
@@ -115,9 +126,11 @@ class DebtProvider with ChangeNotifier {
       debtId: debt.id,
     );
 
+    final uid = _syncService.currentUid;
+    final txBoxName = uid != null ? 'transactions_$uid' : 'transactions_shared';
+    final txBox = await Hive.openBox<Transaction>(txBoxName);
     await txBox.add(transaction);
 
-    // Update account balance
     if (txType == 'Income') {
       account.balance += paymentAmount;
     } else {
@@ -127,26 +140,17 @@ class DebtProvider with ChangeNotifier {
 
     notifyListeners();
 
-    await _syncService.enqueueOperation(
-      boxName,
-      debt.id,
-      'UPDATE',
-      _debtToMap(debt),
-    );
+    await _syncService.enqueueOperation(_baseBoxName, debt.id, 'UPDATE', _debtToMap(debt));
+    await _syncService.enqueueOperation('transactions', transaction.id, 'CREATE', _transactionToMap(transaction));
   }
 
   Future<void> deleteDebt(Debt debt) async {
     final debtId = debt.id;
     await debt.delete();
-    _debts.remove(debt);
+    _debts.removeWhere((d) => d.id == debtId);
     notifyListeners();
 
-    await _syncService.enqueueOperation(
-      boxName,
-      debtId,
-      'DELETE',
-      null,
-    );
+    await _syncService.enqueueOperation(_baseBoxName, debtId, 'DELETE', null);
   }
 
   Map<String, dynamic> _debtToMap(Debt debt) {
@@ -162,6 +166,19 @@ class DebtProvider with ChangeNotifier {
       'status': debt.status,
       'accountId': debt.accountId,
       'phoneNumber': debt.phoneNumber,
+    };
+  }
+
+  Map<String, dynamic> _transactionToMap(Transaction tx) {
+    return {
+      'id': tx.id,
+      'title': tx.title,
+      'amount': tx.amount,
+      'date': tx.date.toIso8601String(),
+      'accountId': tx.accountId,
+      'type': tx.type,
+      'category': tx.category,
+      'debtId': tx.debtId,
     };
   }
 }

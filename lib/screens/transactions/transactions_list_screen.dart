@@ -8,7 +8,7 @@ import 'provider/transaction_provider.dart';
 import '../../models/transaction.dart' as app_models;
 import 'add_transaction_screen.dart';
 import '../accounts/provider/account_provider.dart';
-import '../../providers/inventory_provider.dart';
+import '../inventory/inventory_provider.dart';
 
 class TransactionsListScreen extends StatefulWidget {
   const TransactionsListScreen({super.key});

@@ -32,7 +32,8 @@ class DatabaseService {
 
     await Hive.openBox<Product>('products');
     await Hive.openBox<Shop>('shop');
-    await Hive.openBox('settings');
+    // Open settings box with correct type to match SettingsProvider
+    await Hive.openBox<AppSettings>('settings');
     
     // Open sync queue box at startup to ensure it's always ready
     await Hive.openBox<SyncOperation>('sync_queue');

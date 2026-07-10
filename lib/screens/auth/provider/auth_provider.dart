@@ -22,48 +22,77 @@ class AuthProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
 
   Future<void> checkLoginStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    final isLoggedIn = prefs.getBool(_isLoggedInKey) ?? false;
-    final currentUserId = prefs.getString(_currentUserKey);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isLoggedIn = prefs.getBool(_isLoggedInKey) ?? false;
+      final currentUserId = prefs.getString(_currentUserKey);
 
-    final firebaseUser = _firebaseAuth.currentUser;
-
-    if (firebaseUser != null) {
-      await _loadUserData(firebaseUser.uid);
-    } else if (isLoggedIn && currentUserId != null) {
-      final usersBox = await Hive.openBox<User>(_usersBoxName);
-      _currentUser = usersBox.get(currentUserId);
-      if (_currentUser != null) {
-        // Initialize Sync Service for the persisted user
-        await SyncService().initialize(currentUserId);
+      if (isLoggedIn && currentUserId != null) {
+        final usersBox = await Hive.openBox<User>(_usersBoxName);
+        _currentUser = usersBox.get(currentUserId);
+        
+        if (_currentUser != null) {
+          await SyncService().initialize(currentUserId);
+          notifyListeners();
+          _refreshSessionInBackground();
+          return;
+        }
       }
+
+      final firebaseUser = _firebaseAuth.currentUser;
+      if (firebaseUser != null) {
+        await _loadUserData(firebaseUser.uid);
+      } else {
+        _currentUser = null;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Auth Status Check Error: $e');
+      _currentUser = null;
+      notifyListeners();
     }
-    notifyListeners();
+  }
+
+  void _refreshSessionInBackground() async {
+    final firebaseUser = _firebaseAuth.currentUser;
+    if (firebaseUser != null) {
+      _loadUserData(firebaseUser.uid).catchError((e) {
+        debugPrint('Background session refresh failed: $e');
+      });
+    }
   }
 
   Future<void> _loadUserData(String uid) async {
     try {
       final doc = await _firestore.collection('users').doc(uid).get();
+      
       if (doc.exists) {
         final data = doc.data()!;
-        _currentUser = User(
+        final user = User(
           id: uid,
           name: data['name'] ?? '',
           email: data['email'] ?? '',
           phone: data['phone'],
           password: '',
         );
-        
-        final usersBox = await Hive.openBox<User>(_usersBoxName);
-        await usersBox.put(uid, _currentUser!);
-        
-        await _setSession(_currentUser!);
-        
-        // Initialize Sync Service for the logged in user
+        await _setSession(user);
         await SyncService().initialize(uid);
+      } else {
+        final firebaseUser = _firebaseAuth.currentUser;
+        if (firebaseUser != null) {
+          final minimalUser = User(
+            id: uid,
+            name: firebaseUser.displayName ?? _currentUser?.name ?? '',
+            email: firebaseUser.email ?? _currentUser?.email ?? '',
+            password: '',
+            phone: _currentUser?.phone,
+          );
+          await _setSession(minimalUser);
+          await SyncService().initialize(uid);
+        }
       }
     } catch (e) {
-      debugPrint('Error loading user data: $e');
+      debugPrint('Firestore User Sync Error: $e');
     }
   }
 
@@ -92,10 +121,8 @@ class AuthProvider with ChangeNotifier {
           'createdAt': FieldValue.serverTimestamp(),
         });
 
-        final usersBox = await Hive.openBox<User>(_usersBoxName);
-        await usersBox.put(firebaseUser.uid, newUser);
-        
         await _setSession(newUser);
+        await SyncService().initialize(firebaseUser.uid);
         _isLoading = false;
         return true;
       }
@@ -103,20 +130,9 @@ class AuthProvider with ChangeNotifier {
       return false;
     } on auth.FirebaseAuthException catch (e) {
       _isLoading = false;
-      String message = 'একটি ত্রুটি ঘটেছে';
-      if (e.code == 'email-already-in-use') {
-        message = 'এই ইমেইলটি ইতিমধ্যে ব্যবহৃত হচ্ছে';
-      } else if (e.code == 'weak-password') {
-        message = 'পাসওয়ার্ডটি খুব দুর্বল';
-      } else if (e.code == 'invalid-email') {
-        message = 'সঠিক ইমেইল প্রদান করুন';
-      } else if (e.code == 'unknown' && e.message?.contains('CONFIGURATION_NOT_FOUND') == true) {
-        message = 'Firebase Console-এ Email/Password সুবিধা চালু করুন';
-      }
-      throw message;
+      throw e.message ?? 'একটি ত্রুটি ঘটেছে';
     } catch (e) {
       _isLoading = false;
-      debugPrint('Signup Error: $e');
       throw 'অ্যাকাউন্ট তৈরি করা সম্ভব হয়নি';
     }
   }
@@ -132,7 +148,15 @@ class AuthProvider with ChangeNotifier {
 
       final firebaseUser = authResult.user;
       if (firebaseUser != null) {
-        await _loadUserData(firebaseUser.uid);
+        final initialUser = User(
+          id: firebaseUser.uid,
+          name: firebaseUser.displayName ?? '',
+          email: firebaseUser.email ?? email,
+          password: '',
+        );
+        await _setSession(initialUser);
+        await SyncService().initialize(firebaseUser.uid);
+        _loadUserData(firebaseUser.uid);
         _isLoading = false;
         return true;
       }
@@ -140,18 +164,9 @@ class AuthProvider with ChangeNotifier {
       return false;
     } on auth.FirebaseAuthException catch (e) {
       _isLoading = false;
-      String message = 'লগইন ব্যর্থ হয়েছে';
-      if (e.code == 'user-not-found') {
-        message = 'এই ইমেইলে কোনো অ্যাকাউন্ট পাওয়া যায়নি';
-      } else if (e.code == 'wrong-password') {
-        message = 'ভুল পাসওয়ার্ড';
-      } else if (e.code == 'invalid-email') {
-        message = 'সঠিক ইমেইল প্রদান করুন';
-      }
-      throw message;
+      throw e.message ?? 'লগইন ব্যর্থ হয়েছে';
     } catch (e) {
       _isLoading = false;
-      debugPrint('Login Error: $e');
       throw 'লগইন করা সম্ভব হয়নি';
     }
   }
@@ -161,6 +176,7 @@ class AuthProvider with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_isLoggedInKey, false);
     await prefs.remove(_currentUserKey);
+    SyncService().clearUid();
     _currentUser = null;
     notifyListeners();
   }
@@ -176,18 +192,10 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> updateUserProfile(String name, String email, {String? phone}) async {
     if (_currentUser == null) return;
-
     try {
-      final updateData = {
-        'name': name,
-        'email': email,
-      };
-      if (phone != null) {
-        updateData['phone'] = phone;
-      }
-
+      final updateData = {'name': name, 'email': email};
+      if (phone != null) updateData['phone'] = phone;
       await _firestore.collection('users').doc(_currentUser!.id).update(updateData);
-
       final updatedUser = User(
         id: _currentUser!.id,
         name: name,
@@ -195,22 +203,23 @@ class AuthProvider with ChangeNotifier {
         phone: phone ?? _currentUser!.phone,
         password: _currentUser!.password,
       );
-
-      final usersBox = await Hive.openBox<User>(_usersBoxName);
-      await usersBox.put(updatedUser.id, updatedUser);
-      _currentUser = updatedUser;
-      notifyListeners();
+      await _setSession(updatedUser);
     } catch (e) {
-      debugPrint('Update Profile Error: $e');
       rethrow;
     }
   }
 
   Future<void> _setSession(User user) async {
     _currentUser = user;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_isLoggedInKey, true);
-    await prefs.setString(_currentUserKey, user.id);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_isLoggedInKey, true);
+      await prefs.setString(_currentUserKey, user.id);
+      final usersBox = await Hive.openBox<User>(_usersBoxName);
+      await usersBox.put(user.id, user);
+    } catch (e) {
+      debugPrint('Session Persistence Error: $e');
+    }
     notifyListeners();
   }
 }

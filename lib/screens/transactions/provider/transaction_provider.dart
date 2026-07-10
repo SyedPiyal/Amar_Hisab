@@ -2,22 +2,31 @@ import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import '../../../models/transaction.dart';
 import '../../../models/account.dart';
-import '../../../providers/inventory_provider.dart';
+import '../../inventory/inventory_provider.dart';
 import '../../../services/sync_service.dart';
 
 class TransactionProvider with ChangeNotifier {
-  static const String boxName = 'transactions';
+  static const String _baseBoxName = 'transactions';
   List<Transaction> _transactions = [];
   final SyncService _syncService = SyncService();
 
   TransactionProvider() {
     loadTransactions();
+    // Listen for user changes to reload data
+    _syncService.onUidChanged.listen((uid) {
+      loadTransactions();
+    });
+  }
+
+  String get _scopedBoxName {
+    final uid = _syncService.currentUid;
+    return uid != null ? '${_baseBoxName}_$uid' : '${_baseBoxName}_shared';
   }
 
   List<Transaction> get transactions => _transactions;
 
   Future<void> loadTransactions() async {
-    final box = await Hive.openBox<Transaction>(boxName);
+    final box = await Hive.openBox<Transaction>(_scopedBoxName);
     _transactions = box.values.toList()
       ..sort((a, b) => b.date.compareTo(a.date));
     notifyListeners();
@@ -29,7 +38,7 @@ class TransactionProvider with ChangeNotifier {
     Account? creditAccount,
     InventoryProvider? inventoryProvider,
   }) async {
-    final box = await Hive.openBox<Transaction>(boxName);
+    final box = await Hive.openBox<Transaction>(_scopedBoxName);
     await box.add(transaction);
 
     // Update account balance
@@ -69,7 +78,7 @@ class TransactionProvider with ChangeNotifier {
     notifyListeners();
 
     await _syncService.enqueueOperation(
-      boxName,
+      _baseBoxName,
       transaction.id,
       'CREATE',
       _transactionToMap(transaction),
@@ -115,13 +124,13 @@ class TransactionProvider with ChangeNotifier {
 
     final txId = transaction.id;
     await transaction.delete();
-    final box = await Hive.openBox<Transaction>(boxName);
+    final box = await Hive.openBox<Transaction>(_scopedBoxName);
     _transactions = box.values.toList()
       ..sort((a, b) => b.date.compareTo(a.date));
     notifyListeners();
 
     await _syncService.enqueueOperation(
-      boxName,
+      _baseBoxName,
       txId,
       'DELETE',
       null,

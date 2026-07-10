@@ -4,8 +4,7 @@ import '../../../models/budget.dart';
 import '../../../services/sync_service.dart';
 
 class BudgetProvider with ChangeNotifier {
-  static const String boxName = 'budgets';
-  late Box<Budget> _budgetBox;
+  static const String _baseBoxName = 'budgets';
   List<Budget> _budgets = [];
   final SyncService _syncService = SyncService();
 
@@ -13,24 +12,34 @@ class BudgetProvider with ChangeNotifier {
 
   BudgetProvider() {
     _init();
+    _syncService.onUidChanged.listen((uid) {
+      _init();
+    });
+  }
+
+  String get _scopedBoxName {
+    final uid = _syncService.currentUid;
+    return uid != null ? '${_baseBoxName}_$uid' : '${_baseBoxName}_shared';
   }
 
   Future<void> _init() async {
-    _budgetBox = await Hive.openBox<Budget>(boxName);
-    _loadBudgets();
-  }
-
-  void _loadBudgets() {
-    _budgets = _budgetBox.values.toList();
-    notifyListeners();
+    try {
+      final box = await Hive.openBox<Budget>(_scopedBoxName);
+      _budgets = box.values.toList();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error initializing budgets: $e');
+    }
   }
 
   Future<void> addBudget(Budget budget) async {
-    await _budgetBox.add(budget);
-    _loadBudgets();
+    final box = await Hive.openBox<Budget>(_scopedBoxName);
+    await box.add(budget);
+    _budgets = box.values.toList();
+    notifyListeners();
 
     await _syncService.enqueueOperation(
-      boxName,
+      _baseBoxName,
       budget.id,
       'CREATE',
       _budgetToMap(budget),
@@ -38,11 +47,13 @@ class BudgetProvider with ChangeNotifier {
   }
 
   Future<void> updateBudget(int index, Budget budget) async {
-    await _budgetBox.putAt(index, budget);
-    _loadBudgets();
+    final box = await Hive.openBox<Budget>(_scopedBoxName);
+    await box.putAt(index, budget);
+    _budgets = box.values.toList();
+    notifyListeners();
 
     await _syncService.enqueueOperation(
-      boxName,
+      _baseBoxName,
       budget.id,
       'UPDATE',
       _budgetToMap(budget),
@@ -50,14 +61,16 @@ class BudgetProvider with ChangeNotifier {
   }
 
   Future<void> deleteBudget(int index) async {
-    final budget = _budgetBox.getAt(index);
+    final box = await Hive.openBox<Budget>(_scopedBoxName);
+    final budget = box.getAt(index);
     if (budget != null) {
       final budgetId = budget.id;
-      await _budgetBox.deleteAt(index);
-      _loadBudgets();
+      await box.deleteAt(index);
+      _budgets = box.values.toList();
+      notifyListeners();
 
       await _syncService.enqueueOperation(
-        boxName,
+        _baseBoxName,
         budgetId,
         'DELETE',
         null,

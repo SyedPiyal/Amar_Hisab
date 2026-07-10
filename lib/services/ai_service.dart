@@ -8,7 +8,8 @@ class AiService {
   // Use the standard model name
   static const String _geminiModel = 'gemini-2.5-flash';
 
-  static const String _masterApiKey = 'AQ.Ab8RN6K1Xstwb4L1xZ-kpm4iWj7QCGfCIx1eZg06pa991qggJg';
+  // static const String _masterApiKey = 'AQ.Ab8RN6K1Xstwb4L1xZ-kpm4iWj7QCGfCIx1eZg06pa991qggJg';
+  static const String _masterApiKey = 'AQ.Ab8RN6KRXL7rSTXmC7T0n_PppU9mFdRHLkRH-bWUGy7WvNryEg';
 
   static Future<Map<String, dynamic>> parseVoiceCommand(
     String command,

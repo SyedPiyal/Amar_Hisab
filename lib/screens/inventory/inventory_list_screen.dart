@@ -4,10 +4,13 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
 import '../../theme/app_colors.dart';
-import '../../providers/inventory_provider.dart';
+import 'inventory_provider.dart';
 import '../../models/inventory_item.dart';
 import 'add_item_screen.dart';
 import '../transactions/add_transaction_screen.dart';
+import 'inventory_scanner_screen.dart';
+import '../../providers/billing/product_provider.dart';
+import '../auth/provider/auth_provider.dart';
 
 class InventoryListScreen extends StatefulWidget {
   const InventoryListScreen({super.key});
@@ -18,6 +21,20 @@ class InventoryListScreen extends StatefulWidget {
 
 class _InventoryListScreenState extends State<InventoryListScreen> {
   String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    // Ensure global products and user inventory are loaded
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProductProvider>().loadProducts();
+      
+      final authProvider = context.read<AuthProvider>();
+      if (authProvider.currentUser != null) {
+        context.read<InventoryProvider>().initializeInventory(authProvider.currentUser!.id);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +49,9 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
           IconButton(
             icon: const Icon(Icons.qr_code_scanner_rounded),
             onPressed: () {
-              // TODO: Implement Barcode Scanner
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('স্ক্যানার শীঘ্রই আসছে...')),
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const InventoryScannerScreen()),
               );
             },
           ),

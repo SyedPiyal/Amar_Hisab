@@ -5,12 +5,14 @@ import 'package:uuid/uuid.dart';
 
 import '../../theme/app_colors.dart';
 import '../../models/inventory_item.dart';
-import '../../providers/inventory_provider.dart';
+import 'inventory_provider.dart';
+import 'inventory_scanner_screen.dart';
 
 class AddItemScreen extends StatefulWidget {
   final InventoryItem? item;
+  final Map<String, String>? prefilledItem;
 
-  const AddItemScreen({super.key, this.item});
+  const AddItemScreen({super.key, this.item, this.prefilledItem});
 
   @override
   State<AddItemScreen> createState() => _AddItemScreenState();
@@ -32,8 +34,12 @@ class _AddItemScreenState extends State<AddItemScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.item?.name ?? '');
-    _barcodeController = TextEditingController(text: widget.item?.barcode ?? '');
+    _nameController = TextEditingController(
+      text: widget.item?.name ?? widget.prefilledItem?['name'] ?? '',
+    );
+    _barcodeController = TextEditingController(
+      text: widget.item?.barcode ?? widget.prefilledItem?['barcode'] ?? '',
+    );
     _purchasePriceController = TextEditingController(
       text: widget.item?.purchasePrice.toString() ?? '',
     );
@@ -116,6 +122,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ),
               const SizedBox(height: 16),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Expanded(
                     child: _buildTextField(
@@ -125,13 +132,17 @@ class _AddItemScreenState extends State<AddItemScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  IconButton.filledTonal(
-                    onPressed: () {
-                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('স্ক্যানার শীঘ্রই আসছে...')),
-                      );
-                    },
-                    icon: const Icon(Icons.qr_code_scanner),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: IconButton.filledTonal(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const InventoryScannerScreen()),
+                        );
+                      },
+                      icon: const Icon(Icons.qr_code_scanner),
+                    ),
                   ),
                 ],
               ),

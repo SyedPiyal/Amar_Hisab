@@ -13,23 +13,36 @@ class SyncService {
   factory SyncService() => _instance;
   SyncService._internal();
 
-  static const String _syncQueueBoxName = 'sync_queue';
+  static const String _syncQueueBaseName = 'sync_queue';
   final FirestoreService _firestoreService = FirestoreService();
   final ConnectivityService _connectivityService = ConnectivityService();
   
   final _syncCompletedController = StreamController<void>.broadcast();
   Stream<void> get onSyncCompleted => _syncCompletedController.stream;
   
+  // Notification for UID changes to help providers reload data
+  final _uidController = StreamController<String?>.broadcast();
+  Stream<String?> get onUidChanged => _uidController.stream;
+
   bool _isSyncing = false;
   String? _currentUid;
   StreamSubscription<bool>? _connectivitySubscription;
 
+  String? get currentUid => _currentUid;
+
+  String _getScopedBoxName(String baseName) {
+    if (_currentUid == null) return '${baseName}_shared';
+    return '${baseName}_$_currentUid';
+  }
+
   Future<void> initialize(String uid) async {
     _currentUid = uid;
+    _uidController.add(uid);
     
-    // Ensure box is open
-    if (!Hive.isBoxOpen(_syncQueueBoxName)) {
-      await Hive.openBox<SyncOperation>(_syncQueueBoxName);
+    // Ensure user-scoped sync queue box is open
+    final scopedQueueName = _getScopedBoxName(_syncQueueBaseName);
+    if (!Hive.isBoxOpen(scopedQueueName)) {
+      await Hive.openBox<SyncOperation>(scopedQueueName);
     }
 
     _connectivitySubscription?.cancel();
@@ -39,19 +52,33 @@ class SyncService {
       }
     });
     
-    // Perform full sync if internet might be available initially
+    // Perform full sync
     performInitialSync();
+  }
+
+  void clearUid() {
+    _currentUid = null;
+    _uidController.add(null);
   }
 
   void dispose() {
     _connectivitySubscription?.cancel();
     _syncCompletedController.close();
+    _uidController.close();
   }
 
   Future<void> enqueueOperation(
       String collectionName, String recordId, String operationType, Map<String, dynamic>? data) async {
     try {
-      final box = Hive.box<SyncOperation>(_syncQueueBoxName);
+      if (_currentUid == null) {
+        final prefs = await SharedPreferences.getInstance();
+        _currentUid = prefs.getString('currentUserId');
+      }
+      
+      if (_currentUid == null) return;
+
+      final scopedQueueName = _getScopedBoxName(_syncQueueBaseName);
+      final box = Hive.box<SyncOperation>(scopedQueueName);
       
       final operation = SyncOperation(
         id: const Uuid().v4(),
@@ -72,7 +99,6 @@ class SyncService {
   }
 
   Future<void> syncPendingOperations() async {
-    // If UID is missing, try to get it from SharedPreferences before giving up
     if (_currentUid == null) {
       final prefs = await SharedPreferences.getInstance();
       _currentUid = prefs.getString('currentUserId');
@@ -80,7 +106,8 @@ class SyncService {
 
     if (_isSyncing || _currentUid == null) return;
 
-    final box = Hive.box<SyncOperation>(_syncQueueBoxName);
+    final scopedQueueName = _getScopedBoxName(_syncQueueBaseName);
+    final box = Hive.box<SyncOperation>(scopedQueueName);
     if (box.isEmpty) return;
 
     _isSyncing = true;
@@ -112,15 +139,9 @@ class SyncService {
           success = true;
         } catch (e) {
           debugPrint('Failed to sync operation ${operation.id}: $e');
-          // Check if it's a network error or a logic error
           if (e.toString().contains('network') || e.toString().contains('unavailable')) {
-             // If it's a network error, we stop and wait for connectivity change
              break;
           }
-          // If it's a specific record error (e.g. permission denied on one doc), 
-          // we might want to skip it to avoid blocking others, 
-          // but for safety in financial apps, we'll continue to the next 
-          // but log this one heavily.
           continue; 
         }
 
@@ -159,7 +180,8 @@ class SyncService {
       for (var collection in collections) {
         final cloudData = await _firestoreService.fetchCollection(uid: _currentUid!, collection: collection);
         if (cloudData.isNotEmpty) {
-          final box = await Hive.openBox(collection);
+          final scopedBoxName = '${collection}_$_currentUid';
+          final box = await Hive.openBox(scopedBoxName);
           for (var data in cloudData) {
             _mapAndSaveToHive(collection, data, box);
           }

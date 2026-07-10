@@ -8,26 +8,42 @@ import '../../accounts/provider/account_provider.dart';
 import '../../../services/sync_service.dart';
 
 class ScheduledTransactionProvider with ChangeNotifier {
-  static const String boxName = 'scheduled_transactions';
+  static const String _baseBoxName = 'scheduled_transactions';
   List<ScheduledTransaction> _schedules = [];
   final SyncService _syncService = SyncService();
 
   List<ScheduledTransaction> get schedules => _schedules;
 
+  ScheduledTransactionProvider() {
+    loadSchedules();
+    _syncService.onUidChanged.listen((uid) {
+      loadSchedules();
+    });
+  }
+
+  String get _scopedBoxName {
+    final uid = _syncService.currentUid;
+    return uid != null ? '${_baseBoxName}_$uid' : '${_baseBoxName}_shared';
+  }
+
   Future<void> loadSchedules() async {
-    final box = await Hive.openBox<ScheduledTransaction>(boxName);
-    _schedules = box.values.toList();
-    notifyListeners();
+    try {
+      final box = await Hive.openBox<ScheduledTransaction>(_scopedBoxName);
+      _schedules = box.values.toList();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading schedules: $e');
+    }
   }
 
   Future<void> addSchedule(ScheduledTransaction schedule) async {
-    final box = await Hive.openBox<ScheduledTransaction>(boxName);
+    final box = await Hive.openBox<ScheduledTransaction>(_scopedBoxName);
     await box.put(schedule.id, schedule);
     _schedules = box.values.toList();
     notifyListeners();
 
     await _syncService.enqueueOperation(
-      boxName,
+      _baseBoxName,
       schedule.id,
       'CREATE',
       _scheduleToMap(schedule),
@@ -40,7 +56,7 @@ class ScheduledTransactionProvider with ChangeNotifier {
     notifyListeners();
 
     await _syncService.enqueueOperation(
-      boxName,
+      _baseBoxName,
       schedule.id,
       'UPDATE',
       _scheduleToMap(schedule),
@@ -50,11 +66,11 @@ class ScheduledTransactionProvider with ChangeNotifier {
   Future<void> deleteSchedule(ScheduledTransaction schedule) async {
     final scheduleId = schedule.id;
     await schedule.delete();
-    _schedules.remove(schedule);
+    _schedules.removeWhere((s) => s.id == scheduleId);
     notifyListeners();
 
     await _syncService.enqueueOperation(
-      boxName,
+      _baseBoxName,
       scheduleId,
       'DELETE',
       null,
@@ -65,20 +81,18 @@ class ScheduledTransactionProvider with ChangeNotifier {
     TransactionProvider txProvider,
     AccountProvider accountProvider,
   ) async {
-    final box = await Hive.openBox<ScheduledTransaction>(boxName);
+    final box = await Hive.openBox<ScheduledTransaction>(_scopedBoxName);
     final now = DateTime.now();
     bool updated = false;
 
     for (var schedule in box.values) {
       if (schedule.isActive && now.isAfter(schedule.nextDueDate)) {
-        // Find matching account
         final account = accountProvider.accounts.firstWhere(
           (a) => a.id == schedule.accountId,
           orElse: () => Account(id: '', name: '', type: '', iconName: ''),
         );
 
         if (account.id.isNotEmpty) {
-          // Trigger the transaction insertion
           final newTx = Transaction(
             id: DateTime.now().millisecondsSinceEpoch.toString(),
             title: '${schedule.title} (শিডিউল)',
@@ -91,14 +105,12 @@ class ScheduledTransactionProvider with ChangeNotifier {
 
           await txProvider.addTransaction(newTx, account);
 
-          // Update next due date based on frequency
           DateTime nextDate = schedule.nextDueDate;
           if (schedule.frequency == 'Daily' || schedule.frequency == 'দৈনিক') {
             nextDate = nextDate.add(const Duration(days: 1));
           } else if (schedule.frequency == 'Weekly' || schedule.frequency == 'সাপ্তাহিক') {
             nextDate = nextDate.add(const Duration(days: 7));
           } else {
-            // Monthly
             int nextMonth = nextDate.month + 1;
             int nextYear = nextDate.year;
             if (nextMonth > 12) {
@@ -113,7 +125,7 @@ class ScheduledTransactionProvider with ChangeNotifier {
           updated = true;
 
           await _syncService.enqueueOperation(
-            boxName,
+            _baseBoxName,
             schedule.id,
             'UPDATE',
             _scheduleToMap(schedule),

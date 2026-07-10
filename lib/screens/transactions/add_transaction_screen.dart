@@ -7,7 +7,7 @@ import '../../theme/app_colors.dart';
 import '../../models/transaction.dart';
 import '../../models/account.dart';
 import '../../models/inventory_item.dart';
-import '../../providers/inventory_provider.dart';
+import '../inventory/inventory_provider.dart';
 import 'provider/transaction_provider.dart';
 import '../accounts/provider/account_provider.dart';
 import '../settings/provider/settings_provider.dart';
@@ -79,6 +79,19 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           : _selectedInventoryItem!.purchasePrice;
       _amountController.text = _amount.toString();
     }
+    
+    // Auto-select default account if available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final accountProvider = Provider.of<AccountProvider>(context, listen: false);
+      if (_selectedAccount == null && accountProvider.accounts.isNotEmpty) {
+        setState(() {
+          _selectedAccount = accountProvider.accounts.firstWhere(
+            (a) => a.name.contains('নগদ') || a.name.toLowerCase().contains('cash'),
+            orElse: () => accountProvider.accounts.first,
+          );
+        });
+      }
+    });
   }
 
   void _addSplitItem() {
@@ -465,13 +478,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }) {
     return Consumer<AccountProvider>(
       builder: (context, provider, _) {
+        final accounts = provider.accounts;
+        // Safety check to ensure the selected value is actually in the list
+        final effectiveValue = (value != null && accounts.contains(value)) ? value : null;
+        
         return DropdownButtonFormField<Account>(
           decoration: InputDecoration(
             hintText: hint,
             prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
           ),
-          value: value,
-          items: provider.accounts.map((acc) {
+          value: effectiveValue,
+          items: accounts.map((acc) {
             return DropdownMenuItem(value: acc, child: Text(acc.name, style: GoogleFonts.hindSiliguri()));
           }).toList(),
           onChanged: onChanged,
@@ -705,19 +722,38 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   void _submitTransaction(bool isAdvanced) async {
     final title = _titleController.text.trim();
-    final quantity = double.tryParse(_quantityController.text) ?? 1.0;
+    final quantityText = _quantityController.text.trim();
+    final quantity = double.tryParse(quantityText) ?? 0.0;
     
-    bool isValid = false;
-    if (isAdvanced) {
-      isValid = _fromAccount != null && _toAccount != null && _amount > 0 && title.isNotEmpty;
-      if (_isSplit && isValid) {
-        isValid = _remainingAmount == 0 && _splitItems.isNotEmpty;
+    String? errorMessage;
+
+    if (_amountController.text.isEmpty || _amount <= 0) {
+      errorMessage = 'অনুগ্রহ করে টাকার পরিমাণ লিখুন';
+    } else if (title.isEmpty) {
+      errorMessage = 'অনুগ্রহ করে বিবরণ বা ক্যাটাগরি লিখুন';
+    } else if (_selectedInventoryItem != null && (quantityText.isEmpty || quantity <= 0)) {
+      errorMessage = 'অনুগ্রহ করে পণ্যের সঠিক পরিমাণ লিখুন';
+    } else if (isAdvanced) {
+      if (_fromAccount == null) {
+        errorMessage = 'অনুগ্রহ করে প্রদানকারী অ্যাকাউন্ট (From) সিলেক্ট করুন';
+      } else if (_toAccount == null) {
+        errorMessage = 'অনুগ্রহ করে গ্রহীতা অ্যাকাউন্ট (To) সিলেক্ট করুন';
+      } else if (_isSplit) {
+        if (_splitItems.isEmpty) {
+          errorMessage = 'অনুগ্রহ করে অন্তত একটি স্প্লিট আইটেম যোগ করুন';
+        } else if (_splitItems.any((item) => item['category'].toString().trim().isEmpty)) {
+          errorMessage = 'অনুগ্রহ করে সব স্প্লিট ক্যাটাগরি পূরণ করুন';
+        } else if (_remainingAmount != 0) {
+          errorMessage = 'স্প্লিট পরিমাণের যোগফল মোট পরিমাণের সমান হতে হবে (অবশিষ্ট: ৳ ${_remainingAmount.toStringAsFixed(2)})';
+        }
       }
     } else {
-      isValid = _selectedAccount != null && _amount > 0 && title.isNotEmpty;
+      if (_selectedAccount == null) {
+        errorMessage = 'অনুগ্রহ করে অ্যাকাউন্ট সিলেক্ট করুন';
+      }
     }
 
-    if (isValid) {
+    if (errorMessage == null) {
       final txProvider = Provider.of<TransactionProvider>(context, listen: false);
       final inventoryProvider = Provider.of<InventoryProvider>(context, listen: false);
       final mappedType = _type == 'আয়' ? 'Income' : (_type == 'ব্যয়' ? 'Expense' : 'Transfer');
@@ -790,12 +826,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       
       if (mounted) Navigator.of(context).pop();
     } else {
-      String error = 'অনুগ্রহ করে সব তথ্য সঠিক ভাবে দিন';
-      if (_isSplit && _remainingAmount != 0) {
-        error = 'স্প্লিট পরিমাণের যোগফল মোট পরিমাণের সমান হতে হবে (অবশিষ্ট: ৳ ${_remainingAmount.toStringAsFixed(2)})';
-      }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
+        SnackBar(content: Text(errorMessage)),
       );
     }
   }

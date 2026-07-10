@@ -9,7 +9,7 @@ import 'screens/debts/provider/debt_provider.dart';
 import 'screens/reports/provider/budget_provider.dart';
 import 'screens/transactions/provider/scheduled_transaction_provider.dart';
 import 'screens/reports/provider/savings_goal_provider.dart';
-import 'providers/inventory_provider.dart';
+import 'screens/inventory/inventory_provider.dart';
 import 'providers/billing/product_provider.dart';
 import 'providers/billing/shop_provider.dart';
 import 'providers/billing/billing_provider.dart';
