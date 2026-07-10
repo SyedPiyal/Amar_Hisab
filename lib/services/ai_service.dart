@@ -6,7 +6,7 @@ import '../models/transaction.dart';
 
 class AiService {
   // Use the standard model name
-  static const String _geminiModel = 'gemini-2.5-flash';
+  static const String _geminiModel = 'gemini-3.1-flash-lite';
 
   // static const String _masterApiKey = 'AQ.Ab8RN6K1Xstwb4L1xZ-kpm4iWj7QCGfCIx1eZg06pa991qggJg';
   static const String _masterApiKey = 'AQ.Ab8RN6KRXL7rSTXmC7T0n_PppU9mFdRHLkRH-bWUGy7WvNryEg';
@@ -140,7 +140,10 @@ class AiService {
       if (response.functionCalls.isNotEmpty) {
         final functionCall = response.functionCalls.first;
         final result = await onCallTool(functionCall.name, functionCall.args);
-        response = await chat.sendMessage(Content.functionResponse(functionCall.name, result));
+        // Workaround for Gemini 3.1 thought_signature bug in older SDKs
+        response = await chat.sendMessage(Content.text(
+          'Function ${functionCall.name} returned: ${jsonEncode(result)}. Please provide the final response to the user based on this data in Bengali.'
+        ));
       }
 
       return response.text ?? 'দুঃখিত, আমি বুঝতে পারিনি।';
