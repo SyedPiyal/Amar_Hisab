@@ -128,14 +128,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.search_rounded),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const SearchScreen()),
-              );
-            },
-          ),
+          // IconButton(
+          //   icon: const Icon(Icons.search_rounded),
+          //   onPressed: () {
+          //     Navigator.of(context).push(
+          //       MaterialPageRoute(builder: (context) => const SearchScreen()),
+          //     );
+          //   },
+          // ),
           IconButton(
             icon: const Icon(Icons.notifications_none_rounded),
             onPressed: () {

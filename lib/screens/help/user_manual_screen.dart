@@ -42,6 +42,33 @@ class UserManualScreen extends StatelessWidget {
             ],
           ),
           _buildManualSection(
+            title: 'এআই অ্যাসিস্ট্যান্ট (AI Chat)',
+            icon: Icons.auto_awesome_rounded,
+            steps: [
+              'নিচের নেভিগেশন বার থেকে "এআই অ্যাসিস্ট্যান্ট" বাটনে ক্লিক করুন।',
+              'আপনার লেনদেন বা রিপোর্ট সম্পর্কে বাংলায় কথা বলুন বা টেক্সট লিখুন।',
+              'এআই স্বয়ংক্রিয়ভাবে আপনার জন্য লেনদেন যোগ করতে বা আর্থিক সামারি প্রদান করতে সক্ষম।',
+            ],
+          ),
+          _buildManualSection(
+            title: 'ভেন্ডর ও ইনভেন্টরি',
+            icon: Icons.inventory_2_rounded,
+            steps: [
+              'আপনার নিয়মিত সরবরাহকারী বা ভেন্ডরদের তালিকা তৈরি করুন।',
+              'দোকানের পণ্য বা ইনভেন্টরি আইটেম যোগ করুন এবং স্টক ম্যানেজ করুন।',
+              'ভেন্ডরদের সাথে লেনদেন এবং বকেয়া হিসাব আলাদাভাবে ট্র্যাক করুন।',
+            ],
+          ),
+          _buildManualSection(
+            title: 'পিওএস (POS) সিস্টেম',
+            icon: Icons.point_of_sale_rounded,
+            steps: [
+              '"পিওএস" সেকশন থেকে খুব সহজে কাস্টমারের জন্য ইনভয়েস তৈরি করুন।',
+              'বারকোড স্ক্যানার বা সার্চ অপশন ব্যবহার করে দ্রুত পণ্য নির্বাচন করুন।',
+              'বিক্রয় শেষে প্রিন্টার দিয়ে রশিদ প্রিন্ট করুন ।',
+            ],
+          ),
+          _buildManualSection(
             title: 'অ্যাকাউন্ট ম্যানেজমেন্ট',
             icon: Icons.account_balance_wallet_rounded,
             steps: [
@@ -60,7 +87,7 @@ class UserManualScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 48),
-          _buildHelpCard(),
+          // _buildHelpCard(),
           const SizedBox(height: 48),
         ],
       ),
@@ -177,45 +204,6 @@ class UserManualScreen extends StatelessWidget {
               ),
             );
           }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHelpCard() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.headset_mic_rounded, color: AppColors.primary, size: 32),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'আরও কোনো প্রশ্ন আছে?',
-                  style: GoogleFonts.hindSiliguri(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                Text(
-                  'আমাদের সাপোর্ট টিমের সাথে কথা বলুন।',
-                  style: GoogleFonts.hindSiliguri(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textSecondary),
         ],
       ),
     );

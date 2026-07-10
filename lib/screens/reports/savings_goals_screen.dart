@@ -9,6 +9,24 @@ import '../../theme/app_colors.dart';
 class SavingsGoalsScreen extends StatelessWidget {
   const SavingsGoalsScreen({super.key});
 
+  static const List<IconData> _availableIcons = [
+    Icons.stars_rounded,
+    Icons.laptop_mac_rounded,
+    Icons.flight_takeoff_rounded,
+    Icons.security_rounded,
+    Icons.home_rounded,
+    Icons.directions_car_rounded,
+    Icons.shopping_bag_rounded,
+    Icons.school_rounded,
+  ];
+
+  IconData _getIconData(int codePoint) {
+    return _availableIcons.firstWhere(
+      (icon) => icon.codePoint == codePoint,
+      orElse: () => Icons.stars_rounded,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,7 +109,7 @@ class SavingsGoalsScreen extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      IconData(goal.iconCodePoint, fontFamily: 'MaterialIcons'),
+                      _getIconData(goal.iconCodePoint),
                       color: AppColors.secondary,
                     ),
                   ),
@@ -174,119 +192,120 @@ class SavingsGoalsScreen extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 20,
-          right: 20,
-          top: 20,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'নতুন সঞ্চয় লক্ষ্য যোগ করুন',
-              style: GoogleFonts.hindSiliguri(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: titleController,
-              decoration: InputDecoration(
-                labelText: 'লক্ষ্যের নাম (যেমন: ল্যাপটপ)',
-                labelStyle: GoogleFonts.hindSiliguri(),
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: amountController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'টার্গেট অ্যামাউন্ট',
-                labelStyle: GoogleFonts.hindSiliguri(),
-                prefixText: '৳ ',
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'আইকন নির্বাচন করুন',
-              style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 50,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: <IconData>[
-                  Icons.stars_rounded,
-                  Icons.laptop_mac_rounded,
-                  Icons.flight_takeoff_rounded,
-                  Icons.security_rounded,
-                  Icons.home_rounded,
-                  Icons.directions_car_rounded,
-                  Icons.shopping_bag_rounded,
-                  Icons.school_rounded,
-                ].map((icon) {
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 12),
-                    child: InkWell(
-                      onTap: () => selectedIcon = icon.codePoint,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.secondary.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(icon, color: AppColors.secondary),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () {
-                  if (titleController.text.isNotEmpty &&
-                      amountController.text.isNotEmpty) {
-                    final goal = SavingsGoal(
-                      id: DateTime.now().millisecondsSinceEpoch.toString(),
-                      title: titleController.text,
-                      targetAmount: double.parse(amountController.text),
-                      iconCodePoint: selectedIcon,
-                      createdAt: DateTime.now(),
-                    );
-                    Provider.of<SavingsGoalProvider>(context, listen: false)
-                        .addGoal(goal);
-                    Navigator.pop(context);
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.secondary,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 20,
+            right: 20,
+            top: 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'নতুন সঞ্চয় লক্ষ্য যোগ করুন',
+                style: GoogleFonts.hindSiliguri(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                 ),
-                child: Text(
-                  'সংরক্ষণ করুন',
-                  style: GoogleFonts.hindSiliguri(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: titleController,
+                decoration: InputDecoration(
+                  labelText: 'লক্ষ্যের নাম (যেমন: ল্যাপটপ)',
+                  labelStyle: GoogleFonts.hindSiliguri(),
+                  border:
+                      OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: amountController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'টার্গেট অ্যামাউন্ট',
+                  labelStyle: GoogleFonts.hindSiliguri(),
+                  prefixText: '৳ ',
+                  border:
+                      OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'আইকন নির্বাচন করুন',
+                style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 50,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: _availableIcons.map((icon) {
+                    final isSelected = selectedIcon == icon.codePoint;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: InkWell(
+                        onTap: () {
+                          setModalState(() {
+                            selectedIcon = icon.codePoint;
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: isSelected 
+                                ? AppColors.secondary.withValues(alpha: 0.3)
+                                : AppColors.secondary.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                            border: isSelected ? Border.all(color: AppColors.secondary, width: 2) : null,
+                          ),
+                          child: Icon(icon, color: AppColors.secondary),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (titleController.text.isNotEmpty &&
+                        amountController.text.isNotEmpty) {
+                      final goal = SavingsGoal(
+                        id: DateTime.now().millisecondsSinceEpoch.toString(),
+                        title: titleController.text,
+                        targetAmount: double.parse(amountController.text),
+                        iconCodePoint: selectedIcon,
+                        createdAt: DateTime.now(),
+                      );
+                      Provider.of<SavingsGoalProvider>(context, listen: false)
+                          .addGoal(goal);
+                      Navigator.pop(context);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.secondary,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text(
+                    'সংরক্ষণ করুন',
+                    style: GoogleFonts.hindSiliguri(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-          ],
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );

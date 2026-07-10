@@ -2,8 +2,8 @@ import 'package:flutter/foundation.dart';
 import '../../services/billing/printer_helper.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
-import 'package:network_info_plus/network_info_plus.dart';
-import 'package:ping_discover_network_plus/ping_discover_network_plus.dart';
+// import 'package:network_info_plus/network_info_plus.dart';
+// import 'package:ping_discover_network_plus/ping_discover_network_plus.dart';
 
 enum PrinterStatus {
   initial,
@@ -90,42 +90,42 @@ class PrinterProvider with ChangeNotifier {
     }
   }
 
-  Future<void> scanWifiPrinters() async {
-    if (_isWifiScanning) return;
-    
-    _isWifiScanning = true;
-    _wifiDevices = [];
-    _errorMessage = null;
-    notifyListeners();
-
-    try {
-      final info = NetworkInfo();
-      final wifiIP = await info.getWifiIP();
-      
-      if (wifiIP != null) {
-        final String subnet = wifiIP.substring(0, wifiIP.lastIndexOf('.'));
-        final stream = NetworkAnalyzer.i.discover2(subnet, 9100, timeout: const Duration(milliseconds: 2000));
-        
-        stream.listen((NetworkAddress addr) {
-          if (addr.exists) {
-            _wifiDevices.add(addr.ip);
-            notifyListeners();
-          }
-        }).onDone(() {
-          _isWifiScanning = false;
-          notifyListeners();
-        });
-      } else {
-        _isWifiScanning = false;
-        _errorMessage = 'Could not determine Wi-Fi IP. Ensure Wi-Fi is connected.';
-        notifyListeners();
-      }
-    } catch (e) {
-      _isWifiScanning = false;
-      _errorMessage = e.toString();
-      notifyListeners();
-    }
-  }
+  // Future<void> scanWifiPrinters() async {
+  //   if (_isWifiScanning) return;
+  //
+  //   _isWifiScanning = true;
+  //   _wifiDevices = [];
+  //   _errorMessage = null;
+  //   notifyListeners();
+  //
+  //   try {
+  //     final info = NetworkInfo();
+  //     final wifiIP = await info.getWifiIP();
+  //
+  //     if (wifiIP != null) {
+  //       final String subnet = wifiIP.substring(0, wifiIP.lastIndexOf('.'));
+  //       final stream = NetworkAnalyzer.i.discover2(subnet, 9100, timeout: const Duration(milliseconds: 2000));
+  //
+  //       stream.listen((NetworkAddress addr) {
+  //         if (addr.exists) {
+  //           _wifiDevices.add(addr.ip);
+  //           notifyListeners();
+  //         }
+  //       }).onDone(() {
+  //         _isWifiScanning = false;
+  //         notifyListeners();
+  //       });
+  //     } else {
+  //       _isWifiScanning = false;
+  //       _errorMessage = 'Could not determine Wi-Fi IP. Ensure Wi-Fi is connected.';
+  //       notifyListeners();
+  //     }
+  //   } catch (e) {
+  //     _isWifiScanning = false;
+  //     _errorMessage = e.toString();
+  //     notifyListeners();
+  //   }
+  // }
 
   Future<void> connectBluetoothPrinter(String mac, String name) async {
     _status = PrinterStatus.connecting;

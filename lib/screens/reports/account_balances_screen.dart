@@ -115,16 +115,19 @@ class AccountBalancesScreen extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: GoogleFonts.hindSiliguri(
-              fontSize: isHeader ? 18 : 15,
-              fontWeight: isHeader ? FontWeight.bold : FontWeight.w500,
-              color: color ?? (isHeader ? AppColors.textPrimary : AppColors.textSecondary),
+          Expanded(
+            child: Text(
+              label,
+              style: GoogleFonts.hindSiliguri(
+                fontSize: isHeader ? 18 : 15,
+                fontWeight: isHeader ? FontWeight.bold : FontWeight.w500,
+                color: color ?? (isHeader ? AppColors.textPrimary : AppColors.textSecondary),
+              ),
             ),
           ),
+          const SizedBox(width: 16),
           Text(
             amount,
             style: GoogleFonts.inter(

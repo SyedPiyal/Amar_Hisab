@@ -101,38 +101,38 @@ class _SecurityPasswordScreenState extends State<SecurityPasswordScreen> {
                   style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold),
                 ),
               ),
-              const SizedBox(height: 48),
-              Text(
-                'অন্যান্য নিরাপত্তা',
-                style: GoogleFonts.hindSiliguri(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _buildSecurityToggle(
-                'বায়োমেট্রিক লগইন',
-                'ফিংগারপ্রিন্ট বা ফেস আইডি ব্যবহার করুন',
-                _biometricEnabled,
-                (val) => setState(() => _biometricEnabled = val),
-              ),
-              const SizedBox(height: 32),
-              OutlinedButton(
-                onPressed: () {},
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                  side: const BorderSide(color: AppColors.error),
-                  foregroundColor: AppColors.error,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  'সকল ডিভাইস থেকে লগ আউট করুন',
-                  style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold),
-                ),
-              ),
+              // const SizedBox(height: 48),
+              // Text(
+              //   'অন্যান্য নিরাপত্তা',
+              //   style: GoogleFonts.hindSiliguri(
+              //     fontSize: 18,
+              //     fontWeight: FontWeight.bold,
+              //     color: AppColors.textPrimary,
+              //   ),
+              // ),
+              // const SizedBox(height: 16),
+              // _buildSecurityToggle(
+              //   'বায়োমেট্রিক লগইন',
+              //   'ফিংগারপ্রিন্ট বা ফেস আইডি ব্যবহার করুন',
+              //   _biometricEnabled,
+              //   (val) => setState(() => _biometricEnabled = val),
+              // ),
+              // const SizedBox(height: 32),
+              // OutlinedButton(
+              //   onPressed: () {},
+              //   style: OutlinedButton.styleFrom(
+              //     minimumSize: const Size(double.infinity, 50),
+              //     side: const BorderSide(color: AppColors.error),
+              //     foregroundColor: AppColors.error,
+              //     shape: RoundedRectangleBorder(
+              //       borderRadius: BorderRadius.circular(12),
+              //     ),
+              //   ),
+              //   child: Text(
+              //     'সকল ডিভাইস থেকে লগ আউট করুন',
+              //     style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold),
+              //   ),
+              // ),
             ],
           ),
         ),

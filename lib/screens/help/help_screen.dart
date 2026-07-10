@@ -23,19 +23,19 @@ class HelpScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Search Bar
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'আপনার সমস্যা লিখুন...',
-                prefixIcon: const Icon(Icons.search_rounded),
-                fillColor: Colors.white,
-                filled: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-            const SizedBox(height: 32),
+            // TextField(
+            //   decoration: InputDecoration(
+            //     hintText: 'আপনার সমস্যা লিখুন...',
+            //     prefixIcon: const Icon(Icons.search_rounded),
+            //     fillColor: Colors.white,
+            //     filled: true,
+            //     border: OutlineInputBorder(
+            //       borderRadius: BorderRadius.circular(16),
+            //       borderSide: BorderSide.none,
+            //     ),
+            //   ),
+            // ),
+            // const SizedBox(height: 32),
 
             Text(
               'সচরাচর জিজ্ঞাসিত প্রশ্ন (FAQ)',

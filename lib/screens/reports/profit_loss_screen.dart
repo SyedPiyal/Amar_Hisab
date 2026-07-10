@@ -223,11 +223,13 @@ class ProfitLossScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: GoogleFonts.hindSiliguri(
-              fontSize: 16,
-              fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+          Expanded(
+            child: Text(
+              label,
+              style: GoogleFonts.hindSiliguri(
+                fontSize: 16,
+                fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+              ),
             ),
           ),
           Text(

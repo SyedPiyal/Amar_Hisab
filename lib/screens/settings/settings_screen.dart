@@ -196,11 +196,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           // Theme & Core Settings Section Header
           _buildSectionHeader('সাধারণ সেটিংস (General Settings)'),
-          _buildToggleItem(
-            'ডার্ক মোড (Dark Mode)',
-            settings.darkModeEnabled,
-            (val) => settings.updateSettings(darkModeEnabled: val),
-          ),
+          // _buildToggleItem(
+          //   'ডার্ক মোড (Dark Mode)',
+          //   settings.darkModeEnabled,
+          //   (val) => settings.updateSettings(darkModeEnabled: val),
+          // ),
           _buildToggleItem(
             'স্মার্ট নোটিফিকেশন',
             settings.notificationsEnabled,
@@ -243,47 +243,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
-          const Divider(height: 32),
+          // const Divider(height: 32),
 
-          // Cloud Sync & Config Section
-          _buildSectionHeader('ক্লাউড ব্যাকআপ (Cloud Sync)'),
-          _buildToggleItem(
-            'অটোমেটিক ক্লাউড ব্যাকআপ',
-            settings.isCloudBackupEnabled,
-            (val) {
-              if (val) {
-                _showOtpDialog(context, settings);
-              } else {
-                settings.updateSettings(isCloudBackupEnabled: false);
-              }
-            },
-          ),
-          if (settings.isCloudBackupEnabled)
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 8.0,
-              ),
-              child: ElevatedButton.icon(
-                onPressed: () => _runCloudSync(context),
-                icon: const Icon(Icons.sync_rounded, color: Colors.white),
-                label: Text(
-                  'ম্যানুয়ালি ক্লাউড ব্যাকআপ নিন',
-                  style: GoogleFonts.hindSiliguri(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-          const SizedBox(height: 32),
+          // // Cloud Sync & Config Section
+          // _buildSectionHeader('ক্লাউড ব্যাকআপ (Cloud Sync)'),
+          // _buildToggleItem(
+          //   'অটোমেটিক ক্লাউড ব্যাকআপ',
+          //   settings.isCloudBackupEnabled,
+          //   (val) {
+          //     if (val) {
+          //       _showOtpDialog(context, settings);
+          //     } else {
+          //       settings.updateSettings(isCloudBackupEnabled: false);
+          //     }
+          //   },
+          // ),
+          // if (settings.isCloudBackupEnabled)
+          //   Padding(
+          //     padding: const EdgeInsets.symmetric(
+          //       horizontal: 16.0,
+          //       vertical: 8.0,
+          //     ),
+          //     child: ElevatedButton.icon(
+          //       onPressed: () => _runCloudSync(context),
+          //       icon: const Icon(Icons.sync_rounded, color: Colors.white),
+          //       label: Text(
+          //         'ম্যানুয়ালি ক্লাউড ব্যাকআপ নিন',
+          //         style: GoogleFonts.hindSiliguri(
+          //           color: Colors.white,
+          //           fontWeight: FontWeight.bold,
+          //         ),
+          //       ),
+          //       style: ElevatedButton.styleFrom(
+          //         backgroundColor: AppColors.primary,
+          //         padding: const EdgeInsets.symmetric(vertical: 12),
+          //         shape: RoundedRectangleBorder(
+          //           borderRadius: BorderRadius.circular(12),
+          //         ),
+          //       ),
+          //     ),
+          //   ),
+          // const SizedBox(height: 32),
         ],
       ),
     );

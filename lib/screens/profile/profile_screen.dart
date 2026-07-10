@@ -91,33 +91,33 @@ class ProfileScreen extends StatelessWidget {
               Icons.security_outlined,
               const SecurityPasswordScreen(),
             ),
-            _buildProfileAction(
-              context,
-              'প্রিন্টার সেটিংস',
-              Icons.print_outlined,
-              const PrinterSettingsScreen(),
-            ),
-            _buildProfileAction(
-              context,
-              'পেমেন্ট মেথড',
-              Icons.payments_outlined,
-              const PaymentMethodScreen(),
-            ),
-            _buildProfileAction(
-              context,
-              'ডাটা ব্যাকআপ',
-              Icons.cloud_upload_outlined,
-              const DataBackupScreen(),
-            ),
+            // _buildProfileAction(
+            //   context,
+            //   'প্রিন্টার সেটিংস',
+            //   Icons.print_outlined,
+            //   const PrinterSettingsScreen(),
+            // ),
+            // _buildProfileAction(
+            //   context,
+            //   'পেমেন্ট মেথড',
+            //   Icons.payments_outlined,
+            //   const PaymentMethodScreen(),
+            // ),
+            // _buildProfileAction(
+            //   context,
+            //   'ডাটা ব্যাকআপ',
+            //   Icons.cloud_upload_outlined,
+            //   const DataBackupScreen(),
+            // ),
 
-            const SizedBox(height: 48),
-            TextButton(
-              onPressed: () {},
-              child: Text(
-                'অ্যাকাউন্ট মুছে ফেলুন',
-                style: GoogleFonts.hindSiliguri(color: AppColors.error),
-              ),
-            ),
+            // const SizedBox(height: 48),
+            // TextButton(
+            //   onPressed: () {},
+            //   child: Text(
+            //     'অ্যাকাউন্ট মুছে ফেলুন',
+            //     style: GoogleFonts.hindSiliguri(color: AppColors.error),
+            //   ),
+            // ),
           ],
         ),
       ),

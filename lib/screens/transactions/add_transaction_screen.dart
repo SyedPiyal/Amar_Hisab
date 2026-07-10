@@ -228,11 +228,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.document_scanner_rounded, color: AppColors.primary),
-            tooltip: 'OCR Receipt Scanner',
-            onPressed: _scanReceiptOCR,
-          ),
+          // IconButton(
+          //   icon: const Icon(Icons.document_scanner_rounded, color: AppColors.primary),
+          //   tooltip: 'OCR Receipt Scanner',
+          //   onPressed: _scanReceiptOCR,
+          // ),
           IconButton(
             icon: const Icon(Icons.mic_none_rounded, color: AppColors.primary),
             tooltip: 'AI Voice Command',

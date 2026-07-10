@@ -657,13 +657,26 @@ class _ReportsScreenState extends State<ReportsScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-              const SizedBox(width: 12),
-              Text(name, style: GoogleFonts.hindSiliguri()),
-            ],
+          Expanded(
+            child: Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    name,
+                    style: GoogleFonts.hindSiliguri(),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ),
+          const SizedBox(width: 8),
           Text(percentage, style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
         ],
       ),

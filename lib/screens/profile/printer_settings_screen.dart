@@ -210,10 +210,10 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Sing
                 'নিকটস্থ ওয়াইফাই প্রিন্টার',
                 style: GoogleFonts.hindSiliguri(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              IconButton(
-                onPressed: () => provider.scanWifiPrinters(),
-                icon: const Icon(Icons.refresh),
-              ),
+              // IconButton(
+              //   onPressed: () => provider.scanWifiPrinters(),
+              //   icon: const Icon(Icons.refresh),
+              // ),
             ],
           ),
           const SizedBox(height: 8),

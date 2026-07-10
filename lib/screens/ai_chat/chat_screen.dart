@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../theme/app_colors.dart';
 import '../../models/chat_message.dart';
@@ -35,7 +37,42 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _speech = stt.SpeechToText();
-    _addSystemMessage("হ্যালো! আমি আপনার এআই ফাইন্যান্সিয়াল অ্যাসিস্ট্যান্ট। আমাকে হিসাব যোগ করতে বা ব্যালেন্স সম্পর্কে জিজ্ঞাসা করতে পারেন।");
+    _loadChatHistory();
+  }
+
+  Future<void> _loadChatHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? chatJson = prefs.getString('chat_history');
+    
+    if (chatJson != null) {
+      final List<dynamic> decoded = jsonDecode(chatJson);
+      setState(() {
+        _messages.clear();
+        _messages.addAll(decoded.map((m) => ChatMessage.fromJson(m)).toList());
+        
+        // Rebuild AI history for context
+        _history.clear();
+        for (var msg in _messages) {
+          if (msg.isUser) {
+            _history.add(Content.text(msg.text));
+          } else {
+            // Only add to AI history if it follows a user message (to skip initial greeting/system messages)
+            if (_history.isNotEmpty && _history.last.role == 'user') {
+              _history.add(Content.model([TextPart(msg.text)]));
+            }
+          }
+        }
+      });
+      _scrollToBottom();
+    } else {
+      _addSystemMessage("হ্যালো! আমি আপনার এআই ফাইন্যান্সিয়াল অ্যাসিস্ট্যান্ট। আমাকে হিসাব যোগ করতে বা ব্যালেন্স সম্পর্কে জিজ্ঞাসা করতে পারেন।");
+    }
+  }
+
+  Future<void> _saveChatHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String chatJson = jsonEncode(_messages.map((m) => m.toJson()).toList());
+    await prefs.setString('chat_history', chatJson);
   }
 
   void _addSystemMessage(String text) {
@@ -46,6 +83,7 @@ class _ChatScreenState extends State<ChatScreen> {
         timestamp: DateTime.now(),
       ));
     });
+    _saveChatHistory();
     _scrollToBottom();
   }
 
@@ -57,6 +95,7 @@ class _ChatScreenState extends State<ChatScreen> {
         timestamp: DateTime.now(),
       ));
     });
+    _saveChatHistory();
     _scrollToBottom();
   }
 
@@ -104,6 +143,7 @@ class _ChatScreenState extends State<ChatScreen> {
         _history.add(Content.text(text));
         _history.add(Content.model([TextPart(responseText)]));
       });
+      _saveChatHistory();
       _scrollToBottom();
     }
   }
@@ -136,6 +176,7 @@ class _ChatScreenState extends State<ChatScreen> {
         );
 
         await txProvider.addTransaction(newTx, account);
+        await accountProvider.loadAccounts(); // Notify AccountProvider so balances refresh
         
         return {
           'status': 'success',
@@ -223,6 +264,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 _history.clear();
                 _addSystemMessage("হ্যালো! আমি আপনার এআই ফাইন্যান্সিয়াল অ্যাসিস্ট্যান্ট। আমাকে হিসাব যোগ করতে বা ব্যালেন্স সম্পর্কে জিজ্ঞাসা করতে পারেন।");
               });
+              _saveChatHistory();
             },
           )
         ],
